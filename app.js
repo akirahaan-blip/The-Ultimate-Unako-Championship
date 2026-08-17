@@ -139,7 +139,8 @@ function bindEvents() {
     const nameMap = {
       kanuchan: "カヌチャン",
       nakanuchan: "ナカヌチャン",
-      dekanuchan: "デカヌチャン"
+      dekanuchan: "デカヌチャン",
+      other: "対象外ポケモン"
     };
     state.pokemonName = nameMap[e.target.value] || "カヌチャン";
     recalculateAndRender();

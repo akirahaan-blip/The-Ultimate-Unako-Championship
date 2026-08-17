@@ -259,16 +259,35 @@ export async function analyzeScreenshot(imageElement, onProgress) {
   // SP
   result.sp = extractSP(text);
 
-  // ポケモン名・直取り
+  // ポケモン名・直取りの精密判定
+  let detectedName = null;
+  for (const line of lines) {
+    const t = line.text.replace(/[\s\r\n]/g, '');
+    // "Lv.16カヌチャン" 等から名前を抽出
+    const match = t.match(/Lv\.?[0-9]+([^\s0-9:：]+)/i);
+    if (match && match[1].length >= 2) {
+      detectedName = match[1];
+      break;
+    }
+  }
+
   if (text.includes("デカヌチャン")) {
     result.pokemonName = "デカヌチャン";
     result.catchType = "dekanuchan";
+    result.isTarget = true;
   } else if (text.includes("ナカヌチャン")) {
     result.pokemonName = "ナカヌチャン";
     result.catchType = "nakanuchan";
-  } else {
+    result.isTarget = true;
+  } else if (text.includes("カヌチャン")) {
     result.pokemonName = "カヌチャン";
     result.catchType = "kanuchan";
+    result.isTarget = true;
+  } else {
+    // カヌチャン系以外のポケモンがアップロードされた場合
+    result.pokemonName = detectedName || "対象外ポケモン";
+    result.catchType = "other";
+    result.isTarget = false;
   }
 
   // サブスキル
