@@ -6,3 +6,6 @@ Desktop.ini
 # Temporary files
 *.tmp
 *.log
+
+# Claude Code local settings
+.claude/

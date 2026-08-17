@@ -258,21 +258,19 @@ async function handleImageUpload(file) {
             state.pokemonName = detected.pokemonName;
           }
           if (detected.natureName) state.natureName = detected.natureName;
-          if (detected.ingredients) {
-            state.ingredients = detected.ingredients;
-            state.ingredientPattern = detected.ingredientPattern || getIngredientPattern(state.ingredients[0], state.ingredients[1], state.ingredients[2]);
-          }
-          if (detected.subSkills) {
-            state.subSkills = detected.subSkills;
-          }
+          // 読めなかった枠は既定値（Lv.1〜60ともトマト）のままにしておく
+          state.ingredients = ["A", detected.ingredients[1] || "A", detected.ingredients[2] || "A"];
+          state.ingredientPattern = getIngredientPattern(...state.ingredients);
+          state.subSkills = detected.subSkills;
 
           updateUIFromState();
           recalculateAndRender();
+          renderOcrSummary(detected);
 
-          progressLabel.textContent = "✓ 自動読み取り完了！";
+          progressLabel.textContent = "✓ 自動読み取り完了！下の内容を確認してください";
           setTimeout(() => {
             ocrProgress.style.display = "none";
-          }, 1800);
+          }, 2400);
         } catch (err) {
           console.error(err);
           progressLabel.textContent = "※ 解析エラー（手動で調整できます）";
@@ -284,6 +282,57 @@ async function handleImageUpload(file) {
     console.error(err);
     ocrProgress.style.display = "none";
   }
+}
+
+const SLOT_LEVELS = [10, 25, 50, 70, 80];
+
+/**
+ * 何がスクショから読めて、何が読めなかったのかを一覧で出す。
+ * OCRは完璧にはならないので、ユーザーがどこを直せばいいか一目で分かるようにする。
+ */
+function renderOcrSummary(detected) {
+  const el = document.getElementById("ocrSummary");
+  if (!el) return;
+
+  const rows = [];
+  const ing = detected.ingredients;
+  rows.push({
+    label: "食材",
+    ok: ing[1] && ing[2],
+    text: ["トマト", ...ing.slice(1).map(c => (c ? INGREDIENTS[c].short : "？"))].join(" / ")
+  });
+  SLOT_LEVELS.forEach((lv, i) => {
+    const skill = SUB_SKILLS.find(s => s.id === detected.subSkills[i]);
+    rows.push({ label: `Lv.${lv}`, ok: !!skill, text: skill ? skill.name : "読み取れず" });
+  });
+  rows.push({
+    label: "せいかく",
+    ok: !!detected.natureName,
+    text: detected.natureName || "読み取れず"
+  });
+  rows.push({
+    label: "SP",
+    ok: detected.detected.sp === "sure",
+    text: detected.sp
+      ? `${detected.sp}${detected.detected.sp === "unsure" ? "（要確認）" : ""}`
+      : "読み取れず"
+  });
+
+  const ngCount = rows.filter(r => !r.ok).length;
+  el.innerHTML = `
+    <div class="ocr-summary-head">
+      📋 読み取り結果${ngCount ? `<span class="ocr-warn">${ngCount}件は下のフォームで確認してください</span>` : "<span class='ocr-ok-all'>すべて読み取れました</span>"}
+    </div>
+    <div class="ocr-summary-grid">
+      ${rows.map(r => `
+        <div class="ocr-summary-item ${r.ok ? "" : "ng"}">
+          <span class="ocr-key">${r.ok ? "✓" : "！"} ${r.label}</span>
+          <span class="ocr-val">${r.text}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+  el.style.display = "block";
 }
 
 const ING_IMG_MAP = {

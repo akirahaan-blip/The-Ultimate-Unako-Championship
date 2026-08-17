@@ -601,3 +601,79 @@ button.btn {
 .history-del:hover {
   color: #e53e3e;
 }
+
+/* 自動読み取り結果の一覧 */
+.ocr-summary {
+  display: none;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.ocr-summary-head {
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ocr-warn {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  background: var(--primary-light);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.ocr-ok-all {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #2f855a;
+  background: #e6fffa;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.ocr-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+}
+
+.ocr-summary-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.75rem;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 5px 8px;
+}
+
+.ocr-summary-item.ng {
+  background: var(--primary-light);
+}
+
+.ocr-key {
+  color: var(--text-sub);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ocr-summary-item.ng .ocr-key {
+  color: var(--primary-dark);
+}
+
+.ocr-val {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
