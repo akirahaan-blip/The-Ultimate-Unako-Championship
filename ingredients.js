@@ -16,7 +16,7 @@
  * 取りこぼしていたのは、まさにここが原因。
  */
 
-import { isLockBadge } from './layout.js?v=2';
+import { isLockBadge } from './layout.js?v=3';
 
 const PROTOTYPES = [
   { code: 'A', name: 'あんみんトマト', hist: [0.83, 0.08, 0.04, 0.02] },

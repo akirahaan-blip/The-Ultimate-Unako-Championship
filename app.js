@@ -9,8 +9,9 @@ import {
   NATURE_SCORES,
   NATURES,
   calculateTotalScore
-} from './scoring.js?v=2';
-import { analyzeScreenshot } from './ocr.js?v=2';
+} from './scoring.js?v=3';
+import { analyzeScreenshot } from './ocr.js?v=3';
+import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=3';
 
 // 現在の状態
 let state = {
@@ -55,6 +56,9 @@ const subSkillContainer = document.getElementById("subSkillContainer");
 const historyListEl = document.getElementById("historyList");
 const saveHistoryBtn = document.getElementById("saveHistoryBtn");
 const clearBtn = document.getElementById("clearBtn");
+const shareImgBtn = document.getElementById("shareImgBtn");
+const shareTxtBtn = document.getElementById("shareTxtBtn");
+const postTextEl = document.getElementById("postText");
 
 /**
  * 初期化処理
@@ -197,6 +201,29 @@ function bindEvents() {
       state.silverSeeds[slot] = e.target.checked;
       recalculateAndRender();
     });
+  });
+
+  // X投稿用の書き出し
+  shareImgBtn.addEventListener("click", async () => {
+    const label = shareImgBtn.textContent;
+    shareImgBtn.disabled = true;
+    shareImgBtn.textContent = "🖼️ 作成中...";
+    try {
+      await downloadScoreImage(state, calculateTotalScore(state));
+      shareImgBtn.textContent = "✓ 保存しました";
+    } catch (err) {
+      console.error(err);
+      shareImgBtn.textContent = "※ 保存に失敗";
+    }
+    setTimeout(() => { shareImgBtn.textContent = label; shareImgBtn.disabled = false; }, 1800);
+  });
+
+  shareTxtBtn.addEventListener("click", async () => {
+    const label = shareTxtBtn.textContent;
+    const text = buildPostText(state, calculateTotalScore(state));
+    const ok = await copyPostText(text, postTextEl);
+    shareTxtBtn.textContent = ok ? "✓ コピーしました" : "下の文をコピーしてください";
+    setTimeout(() => { shareTxtBtn.textContent = label; }, 1800);
   });
 
   // 履歴保存
