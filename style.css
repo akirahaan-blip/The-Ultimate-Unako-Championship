@@ -399,6 +399,34 @@ select:focus, input:focus {
   box-shadow: 0 0 0 2px rgba(242, 109, 145, 0.2);
 }
 
+/* 食材プレビューバッジ */
+.ing-preview-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.ing-badge-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.ing-mini-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
 /* サブスキル行 */
 .skill-row {
   display: flex;

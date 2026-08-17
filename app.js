@@ -154,6 +154,7 @@ function bindEvents() {
   const updateIngredientsFromSlots = () => {
     state.ingredients = ["A", ingSlot30.value, ingSlot60.value];
     state.ingredientPattern = getIngredientPattern("A", ingSlot30.value, ingSlot60.value);
+    updateIngredientBadges();
     recalculateAndRender();
   };
   ingSlot30.addEventListener("change", updateIngredientsFromSlots);
@@ -284,6 +285,26 @@ async function handleImageUpload(file) {
   }
 }
 
+const ING_IMG_MAP = {
+  A: { src: "icon_tomato.png", name: "トマト" },
+  B: { src: "icon_cacao.png", name: "カカオ" },
+  C: { src: "icon_potato.png", name: "じゃがいも" }
+};
+
+function updateIngredientBadges() {
+  const ing1 = ING_IMG_MAP[state.ingredients[0] || "A"];
+  const ing30 = ING_IMG_MAP[state.ingredients[1] || "A"];
+  const ing60 = ING_IMG_MAP[state.ingredients[2] || "A"];
+
+  const b1 = document.getElementById("ingBadge1");
+  const b30 = document.getElementById("ingBadge30");
+  const b60 = document.getElementById("ingBadge60");
+
+  if (b1) b1.innerHTML = `<img src="${ing1.src}" class="ing-mini-img"> <span>Lv.1 ${ing1.name}</span>`;
+  if (b30) b30.innerHTML = `<img src="${ing30.src}" class="ing-mini-img"> <span>Lv.30 ${ing30.name}</span>`;
+  if (b60) b60.innerHTML = `<img src="${ing60.src}" class="ing-mini-img"> <span>Lv.60 ${ing60.name}</span>`;
+}
+
 /**
  * 状態をUIフォームへ反映
  */
@@ -294,6 +315,7 @@ function updateUIFromState() {
   // 食材スロット反映
   ingSlot30.value = state.ingredients[1] || "A";
   ingSlot60.value = state.ingredients[2] || "A";
+  updateIngredientBadges();
 
   natureSelect.value = state.natureName || "";
   shinyCheck.checked = state.isShiny;
