@@ -1,27 +1,36 @@
 /**
  * The Ultimate Unako Championship - スコアリングエンジン
+ *
+ * サブスキル名・性格の効果といった「ゲーム側の事実」は
+ * vendor/pokesleep-vision のマスタデータを使う。
+ * ここに持つのは大会の配点だけにして、名前を二重管理しないようにしている。
  */
+import { SUB_SKILLS as SUB_SKILL_MASTER, NATURES as NATURE_MASTER } from './vendor/pokesleep-vision/gamedata.js?v=4';
 
-// サブスキルの定義と基本点
-export const SUB_SKILLS = [
-  { id: "kinomi_s", name: "きのみの数S", short: "きのみS", score: 200, isGold: true, aliases: ["きのみの数S", "きのみS", "きのみの数"] },
-  { id: "otebo", name: "おてつだいボーナス", short: "おてぼ", score: 150, isGold: true, aliases: ["おてつだいボーナス", "おてぼ"] },
-  { id: "suimin_bo", name: "睡眠EXPボーナス", short: "睡眠ボ", score: 150, isGold: true, aliases: ["睡眠EXPボーナス", "睡眠ボーナス", "睡眠ボ"] },
-  { id: "risa_bo", name: "リサーチEXPボーナス", short: "リサボ", score: 80, isGold: true, aliases: ["リサーチEXPボーナス", "リサーチボーナス", "リサボ"] },
-  { id: "yume_bo", name: "ゆめのかけらボーナス", short: "ゆめボ", score: 80, isGold: true, aliases: ["ゆめのかけらボーナス", "ゆめボ"] },
-  { id: "gen_bo", name: "げんき回復ボーナス", short: "げんボ", score: 80, isGold: true, aliases: ["げんき回復ボーナス", "げんボ"] },
-  { id: "skileve_m", name: "スキルレベルアップM", short: "スキレベM", score: 80, isGold: true, aliases: ["スキルレベルアップM", "スキレベM"] },
-  { id: "skileve_s", name: "スキルレベルアップS", short: "スキレベS", score: 40, isGold: false, upgradeTo: "skileve_m", aliases: ["スキルレベルアップS", "スキレベS"] },
-  { id: "speed_m", name: "おてつだいスピードM", short: "スピM", score: 120, isGold: false, aliases: ["おてつだいスピードM", "スピM", "おてスピM"] },
-  { id: "speed_s", name: "おてつだいスピードS", short: "スピS", score: 80, isGold: false, upgradeTo: "speed_m", aliases: ["おてつだいスピードS", "スピS", "おてスピS"] },
-  { id: "skill_m", name: "スキル確率アップM", short: "スキM", score: 80, isGold: false, aliases: ["スキル確率アップM", "スキM", "スキル確率M"] },
-  { id: "skill_s", name: "スキル確率アップS", short: "スキS", score: 40, isGold: false, upgradeTo: "skill_m", aliases: ["スキル確率アップS", "スキS", "スキル確率S"] },
-  { id: "shokuzai_m", name: "食材確率アップM", short: "食材M", score: 10, isGold: false, aliases: ["食材確率アップM", "食材M"] },
-  { id: "shokuzai_s", name: "食材確率アップS", short: "食材S", score: 0, isGold: false, upgradeTo: "shokuzai_m", aliases: ["食材確率アップS", "食材S"] },
-  { id: "shoji_l", name: "最大所持数アップL", short: "所持L", score: 70, isGold: false, aliases: ["最大所持数アップL", "所持L"] },
-  { id: "shoji_m", name: "最大所持数アップM", short: "所持M", score: 50, isGold: false, upgradeTo: "shoji_l", aliases: ["最大所持数アップM", "所持M"] },
-  { id: "shoji_s", name: "最大所持数アップS", short: "所持S", score: 30, isGold: false, upgradeTo: "shoji_m", aliases: ["最大所持数アップS", "所持S"] }
-];
+// サブスキルの大会配点。isGold は「オール金スキルボーナス」の対象かどうか、
+// upgradeTo は銀種で1段上げた時の行き先。
+const SUB_SKILL_POINTS = {
+  kinomi_s:   { score: 200, isGold: true },
+  otebo:      { score: 150, isGold: true },
+  suimin_bo:  { score: 150, isGold: true },
+  risa_bo:    { score: 80,  isGold: true },
+  yume_bo:    { score: 80,  isGold: true },
+  gen_bo:     { score: 80,  isGold: true },
+  skileve_m:  { score: 80,  isGold: true },
+  skileve_s:  { score: 40,  isGold: false, upgradeTo: 'skileve_m' },
+  speed_m:    { score: 120, isGold: false },
+  speed_s:    { score: 80,  isGold: false, upgradeTo: 'speed_m' },
+  skill_m:    { score: 80,  isGold: false },
+  skill_s:    { score: 40,  isGold: false, upgradeTo: 'skill_m' },
+  shokuzai_m: { score: 10,  isGold: false },
+  shokuzai_s: { score: 0,   isGold: false, upgradeTo: 'shokuzai_m' },
+  shoji_l:    { score: 70,  isGold: false },
+  shoji_m:    { score: 50,  isGold: false, upgradeTo: 'shoji_l' },
+  shoji_s:    { score: 30,  isGold: false, upgradeTo: 'shoji_m' }
+};
+
+// マスタ（id / name / short / aliases）に大会の配点を合成する
+export const SUB_SKILLS = SUB_SKILL_MASTER.map(s => ({ ...s, ...SUB_SKILL_POINTS[s.id] }));
 
 // 食材定義（A: トマト, B: カカオ, C: じゃがいも）
 export const INGREDIENTS = {
@@ -73,34 +82,8 @@ export const NATURE_SCORES = {
   }
 };
 
-// 性格一覧（25種類）
-export const NATURES = [
-  { name: "さみしがり", up: "speed", down: "energy" },
-  { name: "いじっぱり", up: "speed", down: "ingredient" },
-  { name: "やんちゃ",   up: "speed", down: "skill" },
-  { name: "ゆうかん",   up: "speed", down: "exp" },
-  { name: "ずぶとい",   up: "energy", down: "speed" },
-  { name: "わんぱく",   up: "energy", down: "ingredient" },
-  { name: "のうてんき", up: "energy", down: "skill" },
-  { name: "のんき",     up: "energy", down: "exp" },
-  { name: "ひかえめ",   up: "ingredient", down: "speed" },
-  { name: "おっとり",   up: "ingredient", down: "energy" },
-  { name: "うっかりや", up: "ingredient", down: "skill" },
-  { name: "れいせい",   up: "ingredient", down: "exp" },
-  { name: "おだやか",   up: "skill", down: "speed" },
-  { name: "おとなしい", up: "skill", down: "energy" },
-  { name: "しんちょう", up: "skill", down: "ingredient" },
-  { name: "なまいき",   up: "skill", down: "exp" },
-  { name: "おくびょう", up: "exp", down: "speed" },
-  { name: "せっかち",   up: "exp", down: "energy" },
-  { name: "ようき",     up: "exp", down: "ingredient" },
-  { name: "むじゃき",   up: "exp", down: "skill" },
-  { name: "てれや",     up: "none", down: "none" },
-  { name: "がんばりや", up: "none", down: "none" },
-  { name: "すなお",     up: "none", down: "none" },
-  { name: "きまぐれ",   up: "none", down: "none" },
-  { name: "まじめ",     up: "none", down: "none" }
-];
+// 性格一覧（25種類）はマスタをそのまま使う
+export const NATURES = NATURE_MASTER;
 
 /**
  * SPボーナス計算
