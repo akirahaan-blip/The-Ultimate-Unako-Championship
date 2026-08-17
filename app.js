@@ -3,20 +3,23 @@
  */
 import {
   SUB_SKILLS,
+  INGREDIENTS,
   INGREDIENT_SCORES,
+  getIngredientPattern,
   NATURE_SCORES,
   NATURES,
   calculateTotalScore
 } from './scoring.js';
 import { analyzeScreenshot } from './ocr.js';
 
-// 現在の状態（初期は未選択・0点スタート）
+// 現在の状態
 let state = {
   pokemonName: "カヌチャン",
   catchType: "kanuchan", // "kanuchan" | "nakanuchan" | "dekanuchan"
   isShiny: false,
   sp: 0,
-  ingredientPattern: "OTHER",
+  ingredients: ["A", "A", "A"], // Lv.1, Lv.30, Lv.60 (A: トマト, B: カカオ, C: じゃがいも)
+  ingredientPattern: "AAA",
   natureName: "",
   subSkills: [null, null, null, null, null],
   silverSeeds: [false, false, false, false, false],
@@ -41,7 +44,9 @@ const cardSpEl = document.getElementById("cardSp");
 
 const pokemonSelect = document.getElementById("pokemonSelect");
 const spInput = document.getElementById("spInput");
-const ingSelect = document.getElementById("ingSelect");
+const ingSlot1 = document.getElementById("ingSlot1");
+const ingSlot30 = document.getElementById("ingSlot30");
+const ingSlot60 = document.getElementById("ingSlot60");
 const natureSelect = document.getElementById("natureSelect");
 const shinyCheck = document.getElementById("shinyCheck");
 const flCheck = document.getElementById("flCheck");
@@ -63,17 +68,9 @@ function init() {
 }
 
 /**
- * フォームコントロール（セレクトボックス等）の生成
+ * フォームコントロール生成
  */
 function renderFormControls() {
-  // 食材セレクト
-  ingSelect.innerHTML = `<option value="OTHER">-- 選択してください --</option>` +
-    Object.entries(INGREDIENT_SCORES).map(([key, item]) => {
-      if (key === "OTHER") return '';
-      const sign = item.score > 0 ? `+${item.score}` : item.score;
-      return `<option value="${key}">${item.label} (${sign}点)</option>`;
-    }).join('');
-
   // 性格セレクト
   natureSelect.innerHTML = `<option value="">-- 選択してください --</option>` +
     NATURES.map(n => {
@@ -153,10 +150,14 @@ function bindEvents() {
     recalculateAndRender();
   });
 
-  ingSelect.addEventListener("change", (e) => {
-    state.ingredientPattern = e.target.value;
+  // 食材スロット変更
+  const updateIngredientsFromSlots = () => {
+    state.ingredients = ["A", ingSlot30.value, ingSlot60.value];
+    state.ingredientPattern = getIngredientPattern("A", ingSlot30.value, ingSlot60.value);
     recalculateAndRender();
-  });
+  };
+  ingSlot30.addEventListener("change", updateIngredientsFromSlots);
+  ingSlot60.addEventListener("change", updateIngredientsFromSlots);
 
   natureSelect.addEventListener("change", (e) => {
     state.natureName = e.target.value;
@@ -215,7 +216,8 @@ function resetState() {
     catchType: "kanuchan",
     isShiny: false,
     sp: 0,
-    ingredientPattern: "OTHER",
+    ingredients: ["A", "A", "A"],
+    ingredientPattern: "AAA",
     natureName: "",
     subSkills: [null, null, null, null, null],
     silverSeeds: [false, false, false, false, false],
@@ -246,7 +248,6 @@ async function handleImageUpload(file) {
             progressLabel.textContent = `解析中... ${pct}%`;
           });
 
-          // 状態を一度リセットしてから上書き
           resetState();
 
           if (detected.sp) state.sp = detected.sp;
@@ -255,7 +256,10 @@ async function handleImageUpload(file) {
             state.pokemonName = detected.pokemonName;
           }
           if (detected.natureName) state.natureName = detected.natureName;
-          if (detected.ingredientPattern) state.ingredientPattern = detected.ingredientPattern;
+          if (detected.ingredients) {
+            state.ingredients = detected.ingredients;
+            state.ingredientPattern = detected.ingredientPattern || getIngredientPattern(state.ingredients[0], state.ingredients[1], state.ingredients[2]);
+          }
           if (detected.subSkills) {
             state.subSkills = detected.subSkills;
           }
@@ -286,7 +290,11 @@ async function handleImageUpload(file) {
 function updateUIFromState() {
   pokemonSelect.value = state.catchType;
   spInput.value = state.sp || "";
-  ingSelect.value = state.ingredientPattern || "OTHER";
+  
+  // 食材スロット反映
+  ingSlot30.value = state.ingredients[1] || "A";
+  ingSlot60.value = state.ingredients[2] || "A";
+
   natureSelect.value = state.natureName || "";
   shinyCheck.checked = state.isShiny;
   flCheck.checked = state.isFlUnder10;
@@ -309,15 +317,12 @@ function updateUIFromState() {
 function recalculateAndRender() {
   const result = calculateTotalScore(state);
 
-  // 1. メインスコア
   scoreValEl.textContent = result.totalScore;
 
-  // 2. ポケモン情報
   const shinyText = state.isShiny ? "★ " : "";
   cardPokemonNameEl.textContent = `${shinyText}${state.pokemonName}`;
   cardSpEl.textContent = state.sp > 0 ? `SP ${state.sp}` : "SP --";
 
-  // 3. 内訳グリッド
   if (result.details.length === 0) {
     breakdownGridEl.innerHTML = `
       <div class="breakdown-item" style="grid-column: 1 / -1; text-align: center; color: var(--text-sub);">
@@ -338,7 +343,6 @@ function recalculateAndRender() {
     }).join('');
   }
 
-  // 4. 特別ボーナスタグ
   const bonuses = [];
   if (state.isShiny) bonuses.push({ name: "色違い (+350)", gold: true });
   if (state.catchType === "dekanuchan") bonuses.push({ name: "デカヌチャン直取り (+150)", gold: false });
@@ -417,5 +421,4 @@ function renderHistory() {
   });
 }
 
-// 起動
 document.addEventListener("DOMContentLoaded", init);

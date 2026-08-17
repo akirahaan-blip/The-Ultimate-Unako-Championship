@@ -23,16 +23,38 @@ export const SUB_SKILLS = [
   { id: "shoji_s", name: "最大所持数アップS", score: 30, isGold: false, upgradeTo: "shoji_m", aliases: ["最大所持数アップS", "所持S"] }
 ];
 
-// 食材構成配点
-export const INGREDIENT_SCORES = {
-  "AAA": { score: 100, label: "AAA (同種3つ)" },
-  "ABB": { score: 60,  label: "ABB" },
-  "ABC": { score: 20,  label: "ABC (3種別)" },
-  "AAB": { score: 10,  label: "AAB" },
-  "AAC": { score: 10,  label: "AAC" },
-  "OIL": { score: -30, label: "ギール (-30)" }, // ピュアなオイル等
-  "OTHER": { score: 0, label: "その他" }
+// 食材定義（A: トマト, B: カカオ, C: じゃがいも）
+export const INGREDIENTS = {
+  A: { name: "あんみんトマト", short: "トマト", code: "A" },
+  B: { name: "リラックスカカオ", short: "カカオ", code: "B" },
+  C: { name: "ほっこりポテト", short: "じゃがいも", code: "C" }
 };
+
+// 食材構成パターン配点
+export const INGREDIENT_SCORES = {
+  "AAA": { score: 100, label: "AAA (トマト/トマト/トマト)" },
+  "ABB": { score: 60,  label: "ABB (トマト/カカオ/カカオ)" },
+  "ABC": { score: 20,  label: "ABC (トマト/カカオ/じゃがいも)" },
+  "AAB": { score: 10,  label: "AAB (トマト/トマト/カカオ)" },
+  "AAC": { score: 10,  label: "AAC (トマト/トマト/じゃがいも)" },
+  "ABA": { score: 10,  label: "ABA (トマト/カカオ/トマト)" },
+  "ACA": { score: 10,  label: "ACA (トマト/じゃがいも/トマト)" },
+  "ACB": { score: 20,  label: "ACB (トマト/じゃがいも/カカオ)" },
+  "ACC": { score: 10,  label: "ACC (トマト/じゃがいも/じゃがいも)" },
+  "GEEL": { score: -30, label: "ギール (-30点)" },
+  "OTHER": { score: 0,  label: "未選択 / その他" }
+};
+
+/**
+ * 3枠の食材からパターンコード（AAA, AAB等）を判定
+ */
+export function getIngredientPattern(slot1 = "A", slot30 = "A", slot60 = "A") {
+  const pattern = `${slot1}${slot30}${slot60}`;
+  if (INGREDIENT_SCORES[pattern]) {
+    return pattern;
+  }
+  return "OTHER";
+}
 
 // 性格定義（上昇・下降補正と配点）
 export const NATURE_SCORES = {
@@ -90,17 +112,14 @@ export function calculateSpBonus(sp) {
   if (!sp || isNaN(sp) || sp <= 0) return { score: 0, reason: null };
   const spStr = String(sp);
 
-  // SP 777
   if (sp === 777) {
     return { score: 200, reason: "SP 777 ボーナス (+200)" };
   }
 
-  // ゾロ目 (例: 111, 222, 333, 444, 555, 666, 888, 999, 1111など)
   if (spStr.length >= 2 && spStr.split('').every(c => c === spStr[0])) {
     return { score: 100, reason: `SP ゾロ目ボーナス (${sp}) (+100)` };
   }
 
-  // キリ番 (下2桁以上が00: 100, 200, 500, 1000等)
   if (spStr.length >= 3 && sp % 100 === 0) {
     return { score: 50, reason: `SP キリ番ボーナス (${sp}) (+50)` };
   }
@@ -110,8 +129,6 @@ export function calculateSpBonus(sp) {
 
 /**
  * 総合スコア計算関数
- * @param {Object} state - 計算対象の個体ステータス
- * @returns {Object} 詳細スコア内訳
  */
 export function calculateTotalScore(state) {
   const details = [];
@@ -133,7 +150,6 @@ export function calculateTotalScore(state) {
       subSkillObjects.push({ ...skillObj, slotIndex: i, lv, rate });
       let baseScore = skillObj.score;
       
-      // 銀種使用フラグがある場合
       const isSilverSeeded = state.silverSeeds?.[i] === true;
       let finalSkillScore = baseScore;
 
@@ -141,11 +157,10 @@ export function calculateTotalScore(state) {
         const upgradedObj = SUB_SKILLS.find(s => s.id === skillObj.upgradeTo);
         if (upgradedObj) {
           const diff = upgradedObj.score - baseScore;
-          finalSkillScore = baseScore + Math.round(diff / 2); // 加点分半減
+          finalSkillScore = baseScore + Math.round(diff / 2);
         }
       }
 
-      // Lv割引適用
       const discountedScore = Math.round(finalSkillScore * rate);
       subSkillTotal += discountedScore;
 
@@ -169,7 +184,10 @@ export function calculateTotalScore(state) {
   totalScore += subSkillTotal;
 
   // 2. 食材構成
-  const ingPattern = state.ingredientPattern || "OTHER";
+  let ingPattern = state.ingredientPattern;
+  if (!ingPattern && state.ingredients) {
+    ingPattern = getIngredientPattern(state.ingredients[0], state.ingredients[1], state.ingredients[2]);
+  }
   const ingData = INGREDIENT_SCORES[ingPattern] || INGREDIENT_SCORES["OTHER"];
   if (ingData.score !== 0) {
     details.push({
@@ -195,11 +213,10 @@ export function calculateTotalScore(state) {
   const downObj = NATURE_SCORES.down[natureDown] || NATURE_SCORES.down["none"];
   const natureTotal = upObj.score + downObj.score;
 
-  if (natureTotal !== 0 || state.natureName) {
-    const natLabel = state.natureName ? `性格: ${state.natureName}` : "性格補正";
+  if (state.natureName) {
     details.push({
       category: "性格補正",
-      name: `${natLabel} (${upObj.name}↑ / ${downObj.name}↓)`,
+      name: `性格: ${state.natureName} (${upObj.name}↑ / ${downObj.name}↓)`,
       score: natureTotal
     });
     totalScore += natureTotal;
@@ -253,16 +270,14 @@ export function calculateTotalScore(state) {
     totalScore += 100;
   }
 
-  // 8. コンボ・スキル構成ボーナス
+  // 8. コンボボーナス
   const validSkills = subSkillObjects.filter(Boolean);
   const validIds = validSkills.map(s => s.id);
 
-  // (A) 3種の神器 (おてぼ・きのみS・睡眠ボ)
   const hasOtebo = validIds.includes("otebo");
   const hasKinomiS = validIds.includes("kinomi_s");
   const hasSuiminBo = validIds.includes("suimin_bo");
   if (hasOtebo && hasKinomiS && hasSuiminBo) {
-    // 該当する3スキルのうち一番割引率が高い(最も低い倍率)スロットの割引を適用
     const artifactSkills = validSkills.filter(s => ["otebo", "kinomi_s", "suimin_bo"].includes(s.id));
     const minRate = Math.min(...artifactSkills.map(s => s.rate));
     const comboScore = Math.round(100 * minRate);
@@ -276,7 +291,6 @@ export function calculateTotalScore(state) {
     totalScore += comboScore;
   }
 
-  // (B) こてい個体ボーナス (所持数S, M, L すべて所持)
   const hasShojiS = validIds.includes("shoji_s");
   const hasShojiM = validIds.includes("shoji_m");
   const hasShojiL = validIds.includes("shoji_l");
@@ -294,7 +308,6 @@ export function calculateTotalScore(state) {
     totalScore += comboScore;
   }
 
-  // (C) オール金スキルボーナス (+200)
   if (validSkills.length === 5 && validSkills.every(s => s.isGold)) {
     const minRate = Math.min(...validSkills.map(s => s.rate));
     const comboScore = Math.round(200 * minRate);
