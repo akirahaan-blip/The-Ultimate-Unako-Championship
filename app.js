@@ -10,15 +10,15 @@ import {
 } from './scoring.js';
 import { analyzeScreenshot } from './ocr.js';
 
-// 現在の状態
+// 現在の状態（初期は未選択・0点スタート）
 let state = {
   pokemonName: "カヌチャン",
   catchType: "kanuchan", // "kanuchan" | "nakanuchan" | "dekanuchan"
   isShiny: false,
-  sp: 443,
-  ingredientPattern: "ABB",
-  natureName: "しんちょう",
-  subSkills: ["skill_s", "speed_s", "shoji_s", "yume_bo", "shokuzai_s"],
+  sp: 0,
+  ingredientPattern: "OTHER",
+  natureName: "",
+  subSkills: [null, null, null, null, null],
   silverSeeds: [false, false, false, false, false],
   isFlUnder10: false,
   isStreamBonus: false
@@ -67,19 +67,22 @@ function init() {
  */
 function renderFormControls() {
   // 食材セレクト
-  ingSelect.innerHTML = Object.entries(INGREDIENT_SCORES).map(([key, item]) => {
-    const sign = item.score > 0 ? `+${item.score}` : item.score;
-    return `<option value="${key}">${item.label} (${sign}点)</option>`;
-  }).join('');
+  ingSelect.innerHTML = `<option value="OTHER">-- 選択してください --</option>` +
+    Object.entries(INGREDIENT_SCORES).map(([key, item]) => {
+      if (key === "OTHER") return '';
+      const sign = item.score > 0 ? `+${item.score}` : item.score;
+      return `<option value="${key}">${item.label} (${sign}点)</option>`;
+    }).join('');
 
   // 性格セレクト
-  natureSelect.innerHTML = NATURES.map(n => {
-    const upObj = NATURE_SCORES.up[n.up] || { name: "なし", score: 0 };
-    const downObj = NATURE_SCORES.down[n.down] || { name: "なし", score: 0 };
-    const total = upObj.score + downObj.score;
-    const sign = total > 0 ? `+${total}` : total;
-    return `<option value="${n.name}">${n.name} (${upObj.name}↑ / ${downObj.name}↓ : ${sign}点)</option>`;
-  }).join('');
+  natureSelect.innerHTML = `<option value="">-- 選択してください --</option>` +
+    NATURES.map(n => {
+      const upObj = NATURE_SCORES.up[n.up] || { name: "なし", score: 0 };
+      const downObj = NATURE_SCORES.down[n.down] || { name: "なし", score: 0 };
+      const total = upObj.score + downObj.score;
+      const sign = total > 0 ? `+${total}` : total;
+      return `<option value="${n.name}">${n.name} (${upObj.name}↑ / ${downObj.name}↓ : ${sign}点)</option>`;
+    }).join('');
 
   // サブスキル5スロット
   const slotLabels = [
@@ -136,7 +139,12 @@ function bindEvents() {
   // フォーム入力変更監視
   pokemonSelect.addEventListener("change", (e) => {
     state.catchType = e.target.value;
-    state.pokemonName = e.target.options[e.target.selectedIndex].text;
+    const nameMap = {
+      kanuchan: "カヌチャン",
+      nakanuchan: "ナカヌチャン",
+      dekanuchan: "デカヌチャン"
+    };
+    state.pokemonName = nameMap[e.target.value] || "カヌチャン";
     recalculateAndRender();
   });
 
@@ -195,21 +203,25 @@ function bindEvents() {
 
   // クリア
   clearBtn.addEventListener("click", () => {
-    state = {
-      pokemonName: "カヌチャン",
-      catchType: "kanuchan",
-      isShiny: false,
-      sp: 0,
-      ingredientPattern: "ABB",
-      natureName: "まじめ",
-      subSkills: [null, null, null, null, null],
-      silverSeeds: [false, false, false, false, false],
-      isFlUnder10: false,
-      isStreamBonus: false
-    };
+    resetState();
     updateUIFromState();
     recalculateAndRender();
   });
+}
+
+function resetState() {
+  state = {
+    pokemonName: "カヌチャン",
+    catchType: "kanuchan",
+    isShiny: false,
+    sp: 0,
+    ingredientPattern: "OTHER",
+    natureName: "",
+    subSkills: [null, null, null, null, null],
+    silverSeeds: [false, false, false, false, false],
+    isFlUnder10: false,
+    isStreamBonus: false
+  };
 }
 
 /**
@@ -234,9 +246,14 @@ async function handleImageUpload(file) {
             progressLabel.textContent = `解析中... ${pct}%`;
           });
 
-          // 状態に反映
+          // 状態を一度リセットしてから上書き
+          resetState();
+
           if (detected.sp) state.sp = detected.sp;
-          if (detected.catchType) state.catchType = detected.catchType;
+          if (detected.catchType) {
+            state.catchType = detected.catchType;
+            state.pokemonName = detected.pokemonName;
+          }
           if (detected.natureName) state.natureName = detected.natureName;
           if (detected.ingredientPattern) state.ingredientPattern = detected.ingredientPattern;
           if (detected.subSkills) {
@@ -249,7 +266,7 @@ async function handleImageUpload(file) {
           progressLabel.textContent = "✓ 自動読み取り完了！";
           setTimeout(() => {
             ocrProgress.style.display = "none";
-          }, 2000);
+          }, 1800);
         } catch (err) {
           console.error(err);
           progressLabel.textContent = "※ 解析エラー（手動で調整できます）";
@@ -269,8 +286,8 @@ async function handleImageUpload(file) {
 function updateUIFromState() {
   pokemonSelect.value = state.catchType;
   spInput.value = state.sp || "";
-  ingSelect.value = state.ingredientPattern;
-  natureSelect.value = state.natureName;
+  ingSelect.value = state.ingredientPattern || "OTHER";
+  natureSelect.value = state.natureName || "";
   shinyCheck.checked = state.isShiny;
   flCheck.checked = state.isFlUnder10;
   streamCheck.checked = state.isStreamBonus;
@@ -301,17 +318,25 @@ function recalculateAndRender() {
   cardSpEl.textContent = state.sp > 0 ? `SP ${state.sp}` : "SP --";
 
   // 3. 内訳グリッド
-  breakdownGridEl.innerHTML = result.details.map(d => {
-    const sign = d.score > 0 ? `+${d.score}` : d.score;
-    const scoreClass = d.score > 0 ? "plus" : (d.score < 0 ? "minus" : "");
-    return `
-      <div class="breakdown-item">
-        <span class="breakdown-cat">${d.category}</span>
-        <span class="breakdown-name" title="${d.name}">${d.name}</span>
-        <div class="breakdown-score ${scoreClass}">${sign}</div>
+  if (result.details.length === 0) {
+    breakdownGridEl.innerHTML = `
+      <div class="breakdown-item" style="grid-column: 1 / -1; text-align: center; color: var(--text-sub);">
+        スクショをアップロードするか、下のフォームでステータスを選択してください
       </div>
     `;
-  }).join('');
+  } else {
+    breakdownGridEl.innerHTML = result.details.map(d => {
+      const sign = d.score > 0 ? `+${d.score}` : d.score;
+      const scoreClass = d.score > 0 ? "plus" : (d.score < 0 ? "minus" : "");
+      return `
+        <div class="breakdown-item">
+          <span class="breakdown-cat">${d.category}</span>
+          <span class="breakdown-name" title="${d.name}">${d.name}</span>
+          <div class="breakdown-score ${scoreClass}">${sign}</div>
+        </div>
+      `;
+    }).join('');
+  }
 
   // 4. 特別ボーナスタグ
   const bonuses = [];
