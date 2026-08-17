@@ -53,22 +53,23 @@ export function getIngredientPattern(slot1 = "A", slot30 = "A", slot60 = "A") {
 }
 
 // 性格定義（上昇・下降補正と配点）
+// short は結果カード用の略称。name をそのまま並べると1行に収まらないため。
 export const NATURE_SCORES = {
   up: {
-    "speed": { name: "おてつだいスピード", score: 100, label: "スピ↑↑ (+100)" },
-    "exp": { name: "獲得EXP", score: 90, label: "EXP↑↑ (+90)" },
-    "skill": { name: "メインスキル発生確率", score: 60, label: "スキル↑↑ (+60)" },
-    "energy": { name: "げんき回復量", score: 40, label: "げんき↑↑ (+40)" },
-    "ingredient": { name: "食材おてつだい確率", score: 0, label: "食材↑↑ (+0)" },
-    "none": { name: "なし", score: 0, label: "なし (+0)" }
+    "speed": { name: "おてつだいスピード", short: "スピ", score: 100, label: "スピ↑↑ (+100)" },
+    "exp": { name: "獲得EXP", short: "EXP", score: 90, label: "EXP↑↑ (+90)" },
+    "skill": { name: "メインスキル発生確率", short: "スキル", score: 60, label: "スキル↑↑ (+60)" },
+    "energy": { name: "げんき回復量", short: "げんき", score: 40, label: "げんき↑↑ (+40)" },
+    "ingredient": { name: "食材おてつだい確率", short: "食材", score: 0, label: "食材↑↑ (+0)" },
+    "none": { name: "なし", short: "なし", score: 0, label: "なし (+0)" }
   },
   down: {
-    "ingredient": { name: "食材おてつだい確率", score: 40, label: "食材↓↓ (+40)" },
-    "energy": { name: "げんき回復量", score: 0, label: "げんき↓↓ (+0)" },
-    "skill": { name: "メインスキル発生確率", score: -20, label: "スキル↓↓ (-20)" },
-    "exp": { name: "獲得EXP", score: -30, label: "EXP↓↓ (-30)" },
-    "speed": { name: "おてつだいスピード", score: -50, label: "スピ↓↓ (-50)" },
-    "none": { name: "なし", score: 0, label: "なし (+0)" }
+    "ingredient": { name: "食材おてつだい確率", short: "食材", score: 40, label: "食材↓↓ (+40)" },
+    "energy": { name: "げんき回復量", short: "げんき", score: 0, label: "げんき↓↓ (+0)" },
+    "skill": { name: "メインスキル発生確率", short: "スキル", score: -20, label: "スキル↓↓ (-20)" },
+    "exp": { name: "獲得EXP", short: "EXP", score: -30, label: "EXP↓↓ (-30)" },
+    "speed": { name: "おてつだいスピード", short: "スピ", score: -50, label: "スピ↓↓ (-50)" },
+    "none": { name: "なし", short: "なし", score: 0, label: "なし (+0)" }
   }
 };
 
@@ -212,7 +213,7 @@ export function calculateTotalScore(state) {
   if (state.natureName) {
     details.push({
       category: "性格補正",
-      name: `性格: ${state.natureName} (${upObj.name}↑ / ${downObj.name}↓)`,
+      name: `${state.natureName} (${upObj.short}↑↑ / ${downObj.short}↓↓)`,
       score: natureTotal
     });
     totalScore += natureTotal;

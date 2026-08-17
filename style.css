@@ -256,6 +256,9 @@ header {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 8px 10px;
+  /* グリッドの子は既定が min-width:auto なので、長い項目名があると
+     セルが縮まずカードごと横にはみ出す。0にして列幅を守らせる。 */
+  min-width: 0;
 }
 
 .breakdown-item.gold-highlight {
@@ -273,10 +276,9 @@ header {
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   display: block;
+  /* スクショで共有するカードなので、末尾を「…」で切らずに折り返す */
+  overflow-wrap: anywhere;
 }
 
 .breakdown-score {
@@ -655,6 +657,7 @@ button.btn {
   background: var(--bg);
   border-radius: 8px;
   padding: 5px 8px;
+  min-width: 0;
 }
 
 .ocr-summary-item.ng {

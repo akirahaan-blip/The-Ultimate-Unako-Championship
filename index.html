@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>＼最強うなこ決定戦／ スコア判定</title>
-  <link rel="stylesheet" href="style.css">
+  <!-- ?v= はキャッシュ避け。JS/CSSを更新したらこの数字を上げること。
+       これがないと、以前このページを開いた人のブラウザが古いファイルを掴んだままになる。 -->
+  <link rel="stylesheet" href="style.css?v=2">
   <!-- Tesseract.js CDN (クライアントサイドOCR) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
@@ -151,6 +153,6 @@
   <h2 class="section-title">保存履歴</h2>
   <div class="form-group" id="historyList"></div>
 
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=2"></script>
 </body>
 </html>

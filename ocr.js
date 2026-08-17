@@ -8,9 +8,9 @@
  *   4. 読めた文字列は、17種のサブスキル名・25種の性格名という「閉じた候補集合」に
  *      あいまい一致させる
  */
-import { SUB_SKILLS, NATURES, getIngredientPattern } from './scoring.js';
-import { detectLayout, readPixels } from './layout.js';
-import { classifyIngredientSlot } from './ingredients.js';
+import { SUB_SKILLS, NATURES, getIngredientPattern } from './scoring.js?v=2';
+import { detectLayout, readPixels } from './layout.js?v=2';
+import { classifyIngredientSlot } from './ingredients.js?v=2';
 
 let tesseractWorker = null;
 
