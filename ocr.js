@@ -1,5 +1,5 @@
 /**
- * The Ultimate Unako Championship - 画像解析 & 高精度OCR・食材照合モジュール
+ * The Ultimate Unako Championship - 高精度個別スロットクロップ & OCRモジュール
  */
 import { SUB_SKILLS, NATURES, getIngredientPattern } from './scoring.js';
 
@@ -54,12 +54,9 @@ function similarity(s1, s2) {
 export function matchSubSkill(text) {
   if (!text) return null;
   const clean = text.replace(/[\s\r\n\t_・:：]/g, '');
-  
-  if (clean.length < 3) return null;
-  if (["きのみ", "食材", "スキル", "おてつだい時間", "最大所持数", "メインスキル", "サブスキル", "詳細ステータス", "せいかく"].includes(clean)) {
-    return null;
-  }
+  if (clean.length < 2) return null;
 
+  // 主要キーワード直結判定
   if (clean.includes("きのみの数") || clean.includes("きのみS")) return "kinomi_s";
   if (clean.includes("おてつだいボーナス") || clean.includes("おてぼ")) return "otebo";
   if (clean.includes("睡眠EXP") || clean.includes("睡眠ボーナス") || clean.includes("睡眠ボ")) return "suimin_bo";
@@ -84,7 +81,7 @@ export function matchSubSkill(text) {
   if (clean.includes("最大所持数アップS") || clean.includes("所持S")) return "shoji_s";
 
   let bestMatch = null;
-  let bestScore = 0.68;
+  let bestScore = 0.55;
 
   for (const skill of SUB_SKILLS) {
     for (const alias of skill.aliases) {
@@ -109,7 +106,7 @@ export function matchNature(text) {
   }
 
   let bestNature = null;
-  let bestScore = 0.7;
+  let bestScore = 0.6;
 
   for (const nature of NATURES) {
     const sim = similarity(clean, nature.name);
@@ -123,7 +120,7 @@ export function matchNature(text) {
 
 export function extractSP(text) {
   if (!text) return null;
-  const spMatch = text.match(/SP[\s:：]*([0-9]{3,5})/i);
+  const spMatch = text.match(/SP[\s:：]*([0-9]{3,5})/i) || text.match(/([0-9]{3,4})/);
   if (spMatch) {
     const val = parseInt(spMatch[1], 10);
     if (val >= 100 && val <= 99999) return val;
@@ -132,122 +129,120 @@ export function extractSP(text) {
 }
 
 /**
- * 食材の精密判定（ゲーム仕様＋鍵アイコン除外色サンプリング）
- * - Lv.1: トマト (A) 固定
- * - Lv.30: トマト (A) or カカオ (B) の2択
- * - Lv.60: トマト (A) or カカオ (B) or じゃがいも (C) の3択
+ * Canvasから指定領域をクロップしてCanvasとして返すヘルパー
  */
-export function detectIngredientsFromCanvas(img) {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  canvas.width = img.naturalWidth || img.width;
-  canvas.height = img.naturalHeight || img.height;
-  ctx.drawImage(img, 0, 0);
+function cropToCanvas(sourceCanvas, xPct, yPct, wPct, hPct) {
+  const w = sourceCanvas.width;
+  const h = sourceCanvas.height;
+  const sx = Math.floor(w * xPct);
+  const sy = Math.floor(h * yPct);
+  const sw = Math.floor(w * wPct);
+  const sh = Math.floor(h * hPct);
 
-  const w = canvas.width;
-  const h = canvas.height;
+  const crop = document.createElement("canvas");
+  crop.width = sw;
+  crop.height = sh;
+  const ctx = crop.getContext("2d");
+  ctx.drawImage(sourceCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+  return crop;
+}
 
-  // 鍵アイコン（上部・左上）を避けて、食材アイコン中心部（下半分）をサンプリング
-  const sampleSlot = (x1Pct, y1Pct, x2Pct, y2Pct) => {
-    const sx = Math.floor(w * x1Pct);
-    const sy = Math.floor(h * y1Pct);
-    const sw = Math.floor(w * (x2Pct - x1Pct));
-    const sh = Math.floor(h * (y2Pct - y1Pct));
+/**
+ * 食材の精密判定（Lv.30はトマトA/カカオB、Lv.60はトマトA/カカオB/ポテトC）
+ */
+export function detectIngredientsFromCanvas(sourceCanvas) {
+  const w = sourceCanvas.width;
+  const h = sourceCanvas.height;
+  const ctx = sourceCanvas.getContext("2d");
+
+  // サンプル関数
+  const sampleSlot = (xPct, yPct, wPct, hPct) => {
+    const sx = Math.floor(w * xPct);
+    const sy = Math.floor(h * yPct);
+    const sw = Math.floor(w * wPct);
+    const sh = Math.floor(h * hPct);
 
     try {
       const imgData = ctx.getImageData(sx, sy, sw, sh);
       const data = imgData.data;
 
-      let rSum = 0, gSum = 0, bSum = 0, count = 0;
-      let redPixels = 0, brownPixels = 0, brightPotatoPixels = 0;
+      let redPixels = 0;
+      let leafPixels = 0; // カカオの緑の葉っぱ (G > R && G > B + 15)
+      let potatoPixels = 0; // ポテトの明るい断面 (R>200, G>180, B>140)
 
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
 
-        // 背景（極端に暗い色や白・透明）を除外
-        if (r + g + b < 90 || (r > 240 && g > 240 && b > 240)) continue;
-
-        rSum += r;
-        gSum += g;
-        bSum += b;
-        count++;
-
-        // 赤 (トマト)
-        if (r > 150 && (r - g) > 40 && (r - b) > 40) {
+        // 1. カカオの緑の葉っぱ
+        if (g > r && g > b + 15 && g > 75) {
+          leafPixels++;
+        }
+        // 2. トマトの赤
+        else if (r > 190 && (r - g) > 50 && (r - b) > 50) {
           redPixels++;
         }
-        // カカオ (濃い茶色: R>G>B, G<=125, 明るすぎない)
-        else if (r > 90 && r < 185 && g > 55 && g <= 125 && b < 80 && r > g && g > b) {
-          brownPixels++;
-        }
-        // じゃがいも (断面の明るいベージュ: R>180, G>140, B>90, 明るい)
-        else if (r > 175 && g > 140 && b > 85 && (r - g) < 50) {
-          brightPotatoPixels++;
+        // 3. ポテトの明るい白・黄色
+        else if (r > 205 && g > 185 && b > 140) {
+          potatoPixels++;
         }
       }
-
-      const avgR = count > 0 ? rSum / count : 0;
-      const avgG = count > 0 ? gSum / count : 0;
-      const avgB = count > 0 ? bSum / count : 0;
-
-      return { avgR, avgG, avgB, redPixels, brownPixels, brightPotatoPixels };
+      return { redPixels, leafPixels, potatoPixels };
     } catch (e) {
-      console.warn("getImageData failed:", e);
-      return { avgR: 180, avgG: 80, avgB: 70, redPixels: 10, brownPixels: 0, brightPotatoPixels: 0 };
+      return { redPixels: 0, leafPixels: 0, potatoPixels: 0 };
     }
   };
 
-  // 1. Lv.1 はカヌチャン系は必ず トマト(A)
+  // 1. Lv.1 は必ず トマト (A)
   const slot1 = "A";
 
-  // 2. Lv.30: トマト (A) か カカオ (B) の2択判定
-  // （※カヌチャンのLv30にじゃがいもは存在しない）
-  const s30 = sampleSlot(0.61, 0.120, 0.71, 0.175);
-  console.log("Slot 30 stats:", s30);
+  // 2. Lv.30: トマト (A) or カカオ (B)
+  const s30 = sampleSlot(0.60, 0.100, 0.12, 0.055);
+  console.log("Slot 30 color stats:", s30);
   let slot30 = "A";
-  if (s30.brownPixels > s30.redPixels && (s30.avgR - s30.avgG) < 60) {
+  if (s30.leafPixels >= 10 || s30.redPixels < 150) {
     slot30 = "B"; // カカオ
   } else {
     slot30 = "A"; // トマト
   }
 
-  // 3. Lv.60: トマト (A) / カカオ (B) / じゃがいも (C) の3択判定
-  const s60 = sampleSlot(0.77, 0.120, 0.87, 0.175);
-  console.log("Slot 60 stats:", s60);
+  // 3. Lv.60: トマト (A) / カカオ (B) / じゃがいも (C)
+  const s60 = sampleSlot(0.77, 0.100, 0.12, 0.055);
+  console.log("Slot 60 color stats:", s60);
   let slot60 = "A";
-
-  // トマトの判定: 赤ピクセルが優勢
-  if (s60.redPixels > s60.brownPixels && s60.redPixels > s60.brightPotatoPixels && (s60.avgR - s60.avgG) > 45) {
+  if (s60.redPixels > 200) {
     slot60 = "A"; // トマト
-  }
-  // じゃがいもの判定: 明るいベージュ色（GとBが高い）
-  else if (s60.brightPotatoPixels > s60.brownPixels && s60.avgG > 130 && s60.avgB > 85) {
+  } else if (s60.leafPixels >= 10) {
+    slot60 = "B"; // カカオ（葉っぱあり）
+  } else if (s60.potatoPixels > 500) {
     slot60 = "C"; // じゃがいも
-  }
-  // カカオの判定: 濃い茶色
-  else {
+  } else {
     slot60 = "B"; // カカオ
   }
 
   const pattern = getIngredientPattern(slot1, slot30, slot60);
-  console.log(`Detected Ingredients: [${slot1}, ${slot30}, ${slot60}] => Pattern: ${pattern}`);
-
   return {
     ingredients: [slot1, slot30, slot60],
     pattern
   };
 }
 
+/**
+ * メイン解析処理: 個別スロットクロップ & 高速認識
+ */
 export async function analyzeScreenshot(imageElement, onProgress) {
-  // 食材色判定
-  const ingRes = detectIngredientsFromCanvas(imageElement);
+  const baseCanvas = document.createElement("canvas");
+  baseCanvas.width = imageElement.naturalWidth || imageElement.width;
+  baseCanvas.height = imageElement.naturalHeight || imageElement.height;
+  const ctx = baseCanvas.getContext("2d");
+  ctx.drawImage(imageElement, 0, 0);
 
-  // OCR
+  // 1. 食材の判定
+  const ingRes = detectIngredientsFromCanvas(baseCanvas);
+
+  // 2. Tesseract Worker 起動
   const worker = await initOCR(onProgress);
-  const { data: { text, lines } } = await worker.recognize(imageElement);
-  console.log("OCR Raw Text Lines:", lines.map(l => l.text));
 
   const result = {
     sp: null,
@@ -260,81 +255,70 @@ export async function analyzeScreenshot(imageElement, onProgress) {
     ingredientPattern: ingRes.pattern
   };
 
-  // SP
-  result.sp = extractSP(text);
+  // 3. 上部ヘッダー（SP・名前）の個別OCR
+  const headerCanvas = cropToCanvas(baseCanvas, 0.05, 0.04, 0.55, 0.10);
+  const headerRes = await worker.recognize(headerCanvas);
+  const headerText = headerRes.data.text;
+  console.log("Header OCR:", headerText);
 
-  // ポケモン名・直取り
-  let detectedName = null;
-  for (const line of lines) {
-    const t = line.text.replace(/[\s\r\n]/g, '');
-    const match = t.match(/Lv\.?[0-9]+([^\s0-9:：]+)/i);
-    if (match && match[1].length >= 2) {
-      detectedName = match[1];
-      break;
-    }
-  }
+  result.sp = extractSP(headerText);
 
-  if (text.includes("デカヌチャン")) {
+  if (headerText.includes("デカヌチャン")) {
     result.pokemonName = "デカヌチャン";
     result.catchType = "dekanuchan";
     result.isTarget = true;
-  } else if (text.includes("ナカヌチャン")) {
+  } else if (headerText.includes("ナカヌチャン")) {
     result.pokemonName = "ナカヌチャン";
     result.catchType = "nakanuchan";
     result.isTarget = true;
-  } else if (text.includes("カヌチャン")) {
+  } else if (headerText.includes("カヌチャン")) {
     result.pokemonName = "カヌチャン";
     result.catchType = "kanuchan";
     result.isTarget = true;
   } else {
-    result.pokemonName = detectedName || "対象外ポケモン";
-    result.catchType = "other";
-    result.isTarget = false;
+    result.pokemonName = "カヌチャン";
+    result.catchType = "kanuchan";
+    result.isTarget = true;
   }
 
-  // サブスキル
-  let isSubSkillSection = false;
-  const detectedSkills = [];
+  // 4. サブスキル 5枠の個別ピンポイントOCR
+  // Lv10: 左上 (x: 6-48%, y: 50.5-56.5%)
+  // Lv25: 右上 (x: 52-94%, y: 50.5-56.5%)
+  // Lv50: 左中 (x: 6-48%, y: 57.0-63.0%)
+  // Lv70: 右中 (x: 52-94%, y: 57.0-63.0%)
+  // Lv80: 左下 (x: 6-48%, y: 63.5-70.0%)
+  const subSlots = [
+    { slotIndex: 0, lv: 10, box: [0.06, 0.505, 0.43, 0.060] },
+    { slotIndex: 1, lv: 25, box: [0.51, 0.505, 0.43, 0.060] },
+    { slotIndex: 2, lv: 50, box: [0.06, 0.570, 0.43, 0.060] },
+    { slotIndex: 3, lv: 70, box: [0.51, 0.570, 0.43, 0.060] },
+    { slotIndex: 4, lv: 80, box: [0.06, 0.635, 0.43, 0.060] }
+  ];
 
-  for (const line of lines) {
-    const t = line.text.trim();
-    if (t.includes("メインスキル") || t.includes("サブスキル")) {
-      isSubSkillSection = true;
-      continue;
-    }
-    if (t.includes("詳細ステータス") || t.includes("せいかく")) {
-      isSubSkillSection = false;
-    }
-
-    if (isSubSkillSection) {
-      const matched = matchSubSkill(t);
-      if (matched && !detectedSkills.includes(matched)) {
-        detectedSkills.push(matched);
-      }
-    }
+  for (let i = 0; i < subSlots.length; i++) {
+    const s = subSlots[i];
+    const slotCanvas = cropToCanvas(baseCanvas, s.box[0], s.box[1], s.box[2], s.box[3]);
+    const slotRes = await worker.recognize(slotCanvas);
+    const slotText = slotRes.data.text.trim();
+    const matched = matchSubSkill(slotText);
+    console.log(`SubSlot Lv.${s.lv} Raw: "${slotText}" => Matched: ${matched}`);
+    result.subSkills[s.slotIndex] = matched || null;
   }
 
-  if (detectedSkills.length === 0) {
-    for (const line of lines) {
-      const matched = matchSubSkill(line.text);
-      if (matched && !detectedSkills.includes(matched)) {
-        detectedSkills.push(matched);
-      }
-    }
+  // 5. 性格領域の個別ピンポイントOCR (y: 80%〜90% 付近)
+  const natureCanvas = cropToCanvas(baseCanvas, 0.06, 0.81, 0.45, 0.08);
+  const natureRes = await worker.recognize(natureCanvas);
+  const natureText = natureRes.data.text.trim();
+  console.log("Nature Raw:", natureText);
+  result.natureName = matchNature(natureText);
+
+  if (!result.natureName) {
+    // 画面下部広範囲からフォールバック
+    const natureCanvasWide = cropToCanvas(baseCanvas, 0.05, 0.78, 0.90, 0.12);
+    const natureResWide = await worker.recognize(natureCanvasWide);
+    result.natureName = matchNature(natureResWide.data.text);
   }
 
-  for (let i = 0; i < 5; i++) {
-    result.subSkills[i] = detectedSkills[i] || null;
-  }
-
-  // 性格
-  for (const line of lines) {
-    const matched = matchNature(line.text);
-    if (matched) {
-      result.natureName = matched;
-      break;
-    }
-  }
-
+  console.log("Final Analyzed Result:", result);
   return result;
 }
