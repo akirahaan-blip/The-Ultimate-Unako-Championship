@@ -36,8 +36,26 @@ body {
 /* ヘッダー */
 header {
   text-align: center;
-  margin-bottom: 20px;
-  padding: 16px 0 8px;
+  margin-bottom: 16px;
+  padding: 12px 0 6px;
+}
+
+.mascot-wrap {
+  margin-bottom: 4px;
+}
+
+.header-mascot {
+  width: 96px;
+  height: auto;
+  max-height: 100px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(242, 109, 145, 0.25));
+  animation: floatMascot 3s ease-in-out infinite alternate;
+}
+
+@keyframes floatMascot {
+  0% { transform: translateY(0px) rotate(-1deg); }
+  100% { transform: translateY(-5px) rotate(1.5deg); }
 }
 
 .flashy-title {
@@ -50,7 +68,7 @@ header {
   filter: drop-shadow(0 2px 8px rgba(255, 0, 128, 0.35));
   display: inline-block;
   transform: perspective(400px) rotateX(4deg);
-  margin: 4px 0 6px;
+  margin: 2px 0 4px;
   line-height: 1.25;
 }
 
@@ -59,6 +77,16 @@ header {
   font-weight: 700;
   color: #d8456f;
   letter-spacing: 0.08em;
+}
+
+.card-mascot-icon {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  background: var(--primary-light);
+  border: 1.5px solid #ffc2d3;
+  border-radius: 10px;
+  padding: 2px;
 }
 
 /* 画像ドロップエリア */
