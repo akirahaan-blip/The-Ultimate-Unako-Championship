@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>The Ultimate Unako Championship スコアチェッカー</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Tesseract.js CDN (クライアントサイドOCR) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+
+  <header>
+    <div class="title-badge">🏆 ポケモンスリープ 独自イベント</div>
+    <h1>うなこ杯 スコアチェッカー</h1>
+    <div class="subtitle">The Ultimate Unako Championship 公式判定ツール</div>
+  </header>
+
+  <!-- スクショ画像アップロード -->
+  <section class="upload-card" id="uploadCard">
+    <input type="file" id="fileInput" accept="image/*">
+    <div class="upload-icon">📸</div>
+    <div class="upload-text">スクショ画像をアップロード / ドロップ</div>
+    <div class="upload-subtext">ステータス画面の写真から自動でスコアを判定します</div>
+    
+    <div class="ocr-progress" id="ocrProgress">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">解析中...</div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       スクショ用 結果カード (スクリーンショットに最適化)
+       ============================================================ -->
+  <main class="result-card" id="resultCard">
+    <div class="result-header">
+      <div class="pokemon-meta">
+        <span class="pokemon-badge" id="cardPokemonName">カヌチャン</span>
+        <span class="sp-badge" id="cardSp">SP 443</span>
+      </div>
+      <div class="score-main">
+        <div class="score-title">Total Score</div>
+        <div class="score-number-wrap">
+          <span class="score-val" id="scoreVal">0</span>
+          <span class="score-unit">pt</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 適用ボーナスタグ -->
+    <div class="bonus-tags" id="bonusTags"></div>
+
+    <!-- 内訳グリッド -->
+    <div class="breakdown-grid" id="breakdownGrid"></div>
+
+    <div class="card-footer">
+      <span>The Ultimate Unako Championship</span>
+      <span>公式スコア判定</span>
+    </div>
+  </main>
+
+  <!-- 操作ボタン -->
+  <div class="btn-group">
+    <button class="btn btn-primary" id="saveHistoryBtn">📥 記録を履歴に保存</button>
+    <button class="btn btn-secondary" id="clearBtn">🔄 リセット</button>
+  </div>
+
+  <!-- ============================================================
+       手動調整・完全選択式フォーム
+       ============================================================ -->
+  <h2 class="section-title">ステータス確認・手動調整</h2>
+
+  <div class="form-group">
+    <div class="form-row">
+      <div class="form-col">
+        <label for="pokemonSelect">個体・直取り種別</label>
+        <select id="pokemonSelect">
+          <option value="kanuchan">カヌチャン</option>
+          <option value="nakanuchan">ナカヌチャン直取り (+50点)</option>
+          <option value="dekanuchan">デカヌチャン直取り (+150点)</option>
+        </select>
+      </div>
+      <div class="form-col">
+        <label for="spInput">SP</label>
+        <input type="number" id="spInput" placeholder="443" min="0">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-col">
+        <label for="ingSelect">食材構成</label>
+        <select id="ingSelect"></select>
+      </div>
+      <div class="form-col">
+        <label for="natureSelect">性格</label>
+        <select id="natureSelect"></select>
+      </div>
+    </div>
+
+    <!-- 特別ボーナスチェックボックス -->
+    <div style="margin-top: 12px;">
+      <label>特別ボーナス</label>
+      <div class="chip-grid">
+        <label class="chip-checkbox">
+          <input type="checkbox" id="shinyCheck"> ★ 色違い (+350点)
+        </label>
+        <label class="chip-checkbox">
+          <input type="checkbox" id="flCheck"> FL10以内 (+100点)
+        </label>
+        <label class="chip-checkbox">
+          <input type="checkbox" id="streamCheck"> リサ配ボーナス (+70点)
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- サブスキル5枠 -->
+  <h2 class="section-title">サブスキル（Lv10〜80）</h2>
+  <div class="form-group" id="subSkillContainer"></div>
+
+  <!-- 履歴 -->
+  <h2 class="section-title">保存履歴</h2>
+  <div class="form-group" id="historyList"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

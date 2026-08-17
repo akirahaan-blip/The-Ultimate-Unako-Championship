@@ -1,0 +1,551 @@
+:root {
+  --primary: #f26d91;
+  --primary-dark: #d8456f;
+  --primary-light: #ffeef3;
+  --accent: #5e6b7c;
+  --gold: #f5a623;
+  --gold-bg: #fff8e6;
+  --blue: #2d88ff;
+  --blue-bg: #edf5ff;
+  --bg: #f7f9fb;
+  --card-bg: #ffffff;
+  --text-main: #2d3748;
+  --text-sub: #718096;
+  --border: #e2e8f0;
+  --radius: 16px;
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(242, 109, 145, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  background-color: var(--bg);
+  color: var(--text-main);
+  line-height: 1.5;
+  padding: 12px 12px 60px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* ヘッダー */
+header {
+  text-align: center;
+  margin-bottom: 16px;
+  padding: 12px 0 6px;
+}
+
+.title-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  box-shadow: 0 2px 8px rgba(242, 109, 145, 0.3);
+}
+
+h1 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+/* 画像ドロップエリア */
+.upload-card {
+  background: var(--card-bg);
+  border: 2px dashed var(--primary);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.upload-card:hover, .upload-card.dragover {
+  background: var(--primary-light);
+  border-color: var(--primary-dark);
+}
+
+.upload-card input[type="file"] {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.upload-icon {
+  font-size: 2rem;
+  margin-bottom: 6px;
+}
+
+.upload-text {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--primary-dark);
+}
+
+.upload-subtext {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+.ocr-progress {
+  display: none;
+  margin-top: 12px;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #edf2f7;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  transition: width 0.3s ease;
+}
+
+.progress-label {
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   スクショ用 結果カード (メイン)
+   ============================================================ */
+.result-card {
+  background: #ffffff;
+  border: 2px solid #ffe2ea;
+  border-radius: 20px;
+  padding: 20px 16px;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 6px;
+  background: linear-gradient(90deg, #f26d91, #ff9ebb, #a0aec0);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.pokemon-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pokemon-badge {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 3px 10px;
+  border-radius: 8px;
+}
+
+.sp-badge {
+  background: #edf2f7;
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+.score-main {
+  text-align: right;
+}
+
+.score-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  text-transform: uppercase;
+}
+
+.score-number-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.score-val {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--primary-dark);
+  line-height: 1;
+  font-feature-settings: "tnum";
+}
+
+.score-unit {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+/* スコア内訳リスト */
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.breakdown-item {
+  background: #fafbfc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.breakdown-item.gold-highlight {
+  background: var(--gold-bg);
+  border-color: #ffd880;
+}
+
+.breakdown-cat {
+  font-size: 0.7rem;
+  color: var(--text-sub);
+  display: block;
+}
+
+.breakdown-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.breakdown-score {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  text-align: right;
+}
+
+.breakdown-score.plus {
+  color: #107c41;
+}
+
+.breakdown-score.minus {
+  color: #c5221f;
+}
+
+/* 適用された特別ボーナス */
+.bonus-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.bonus-tag {
+  background: #fff0f5;
+  color: #c2185b;
+  border: 1px solid #f8bbd0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.bonus-tag.gold {
+  background: #fff9e6;
+  color: #b78103;
+  border-color: #ffe082;
+}
+
+/* カードフッター */
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  font-size: 0.7rem;
+  color: var(--text-sub);
+}
+
+/* ============================================================
+   手動設定・調整フォーム (アコーディオン / 完全選択式)
+   ============================================================ */
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin: 18px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-title::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 14px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+.form-group {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.form-row:last-child {
+  margin-bottom: 0;
+}
+
+.form-col {
+  flex: 1;
+  min-width: 120px;
+}
+
+label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  margin-bottom: 4px;
+}
+
+select, input[type="number"], input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  background: #fff;
+  color: var(--text-main);
+  outline: none;
+  font-family: inherit;
+}
+
+select:focus, input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(242, 109, 145, 0.2);
+}
+
+/* サブスキル行 */
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.skill-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.skill-lv-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #edf2f7;
+  color: var(--text-sub);
+  padding: 4px 8px;
+  border-radius: 6px;
+  min-width: 58px;
+  text-align: center;
+}
+
+.skill-lv-badge.discount {
+  background: #fff0f5;
+  color: var(--primary-dark);
+}
+
+.skill-select {
+  flex: 1;
+}
+
+.seed-check {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+/* ボタングループ / チェックボックス一覧 */
+.chip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.chip-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.chip-checkbox input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+}
+
+.chip-checkbox:hover {
+  background: var(--primary-light);
+  border-color: #ffc2d3;
+}
+
+.chip-checkbox.checked {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+/* 操作ボタン */
+.btn-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+button.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(242, 109, 145, 0.3);
+}
+
+.btn-primary:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+
+.btn-secondary:hover {
+  background: #f8fafc;
+}
+
+/* 履歴リスト */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-item {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.history-meta {
+  font-size: 0.72rem;
+  color: var(--text-sub);
+}
+
+.history-score {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.history-del {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px;
+  margin-left: 8px;
+}
+
+.history-del:hover {
+  color: #e53e3e;
+}
