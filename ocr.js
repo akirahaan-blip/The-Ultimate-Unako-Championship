@@ -1,5 +1,5 @@
 /**
- * The Ultimate Unako Championship - 画像解析 & 高精度OCR・食材テンプレート照合モジュール
+ * The Ultimate Unako Championship - 画像解析 & 高精度OCR・食材照合モジュール
  */
 import { SUB_SKILLS, NATURES, getIngredientPattern } from './scoring.js';
 
@@ -132,19 +132,10 @@ export function extractSP(text) {
 }
 
 /**
- * syokuzai.png から抽出した3食材の基準RGBプロファイル
- * トマト (A): [179, 85, 69]
- * カカオ (B): [164, 109, 58]
- * ポテト (C): [197, 156, 104]
- */
-const INGREDIENT_PROFILES = {
-  A: { name: "トマト", r: 179, g: 85,  b: 69 },
-  B: { name: "カカオ", r: 164, g: 109, b: 58 },
-  C: { name: "ポテト", r: 197, g: 156, b: 104 }
-};
-
-/**
- * Canvasによるピクセル色距離解析（syokuzai.pngプロファイル照合）
+ * 食材の精密判定（ゲーム仕様＋鍵アイコン除外色サンプリング）
+ * - Lv.1: トマト (A) 固定
+ * - Lv.30: トマト (A) or カカオ (B) の2択
+ * - Lv.60: トマト (A) or カカオ (B) or じゃがいも (C) の3択
  */
 export function detectIngredientsFromCanvas(img) {
   const canvas = document.createElement("canvas");
@@ -156,23 +147,8 @@ export function detectIngredientsFromCanvas(img) {
   const w = canvas.width;
   const h = canvas.height;
 
-  // 各スロットの領域
-  const slotBoxes = [
-    { name: "slot1",  box: [0.44, 0.035, 0.56, 0.175] }, // Lv.1
-    { name: "slot30", box: [0.60, 0.100, 0.72, 0.180] }, // Lv.30
-    { name: "slot60", box: [0.76, 0.100, 0.88, 0.180] }  // Lv.60
-  ];
-
-  const detected = [];
-
-  slotBoxes.forEach((slot, index) => {
-    // Lv.1 はカヌチャン系は必ず トマト(A)
-    if (index === 0) {
-      detected.push("A");
-      return;
-    }
-
-    const [x1Pct, y1Pct, x2Pct, y2Pct] = slot.box;
+  // 鍵アイコン（上部・左上）を避けて、食材アイコン中心部（下半分）をサンプリング
+  const sampleSlot = (x1Pct, y1Pct, x2Pct, y2Pct) => {
     const sx = Math.floor(w * x1Pct);
     const sy = Math.floor(h * y1Pct);
     const sw = Math.floor(w * (x2Pct - x1Pct));
@@ -182,53 +158,81 @@ export function detectIngredientsFromCanvas(img) {
       const imgData = ctx.getImageData(sx, sy, sw, sh);
       const data = imgData.data;
 
-      let scoreA = 0; // トマト
-      let scoreB = 0; // カカオ
-      let scoreC = 0; // ポテト
+      let rSum = 0, gSum = 0, bSum = 0, count = 0;
+      let redPixels = 0, brownPixels = 0, brightPotatoPixels = 0;
 
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
 
-        // 背景（暗い色や白・グレー等）を除外
-        if (r + g + b < 90 || (Math.abs(r - g) < 15 && Math.abs(g - b) < 15)) {
-          continue;
-        }
+        // 背景（極端に暗い色や白・透明）を除外
+        if (r + g + b < 90 || (r > 240 && g > 240 && b > 240)) continue;
 
-        // 1. トマト判定 (Rが突出して高い: R-G > 60)
-        if (r > 150 && (r - g) > 55 && (r - b) > 50) {
-          scoreA += 3;
+        rSum += r;
+        gSum += g;
+        bSum += b;
+        count++;
+
+        // 赤 (トマト)
+        if (r > 150 && (r - g) > 40 && (r - b) > 40) {
+          redPixels++;
         }
-        // 2. じゃがいも判定 (GとBが高く明るい: G > 135, B > 80)
-        else if (r > 165 && g > 135 && b > 80 && (r - g) < 55) {
-          scoreC += 2.5;
+        // カカオ (濃い茶色: R>G>B, G<=125, 明るすぎない)
+        else if (r > 90 && r < 185 && g > 55 && g <= 125 && b < 80 && r > g && g > b) {
+          brownPixels++;
         }
-        // 3. カカオ判定 (茶色: R>G>B, Gが控えめ 70〜130, Bが低い < 85)
-        else if (r > 120 && g > 70 && g < 135 && b < 85 && r > g && g > b) {
-          scoreB += 2.5;
+        // じゃがいも (断面の明るいベージュ: R>180, G>140, B>90, 明るい)
+        else if (r > 175 && g > 140 && b > 85 && (r - g) < 50) {
+          brightPotatoPixels++;
         }
       }
 
-      console.log(`Ingredient ${slot.name} matching scores: A(Tomato)=${scoreA}, B(Cacao)=${scoreB}, C(Potato)=${scoreC}`);
+      const avgR = count > 0 ? rSum / count : 0;
+      const avgG = count > 0 ? gSum / count : 0;
+      const avgB = count > 0 ? bSum / count : 0;
 
-      if (scoreA >= scoreB && scoreA >= scoreC) {
-        detected.push("A");
-      } else if (scoreB >= scoreA && scoreB >= scoreC) {
-        detected.push("B");
-      } else {
-        detected.push("C");
-      }
+      return { avgR, avgG, avgB, redPixels, brownPixels, brightPotatoPixels };
     } catch (e) {
-      console.warn("Canvas getImageData error:", e);
-      detected.push("A");
+      console.warn("getImageData failed:", e);
+      return { avgR: 180, avgG: 80, avgB: 70, redPixels: 10, brownPixels: 0, brightPotatoPixels: 0 };
     }
-  });
+  };
 
-  const slot1 = detected[0] || "A";
-  const slot30 = detected[1] || "A";
-  const slot60 = detected[2] || "A";
+  // 1. Lv.1 はカヌチャン系は必ず トマト(A)
+  const slot1 = "A";
+
+  // 2. Lv.30: トマト (A) か カカオ (B) の2択判定
+  // （※カヌチャンのLv30にじゃがいもは存在しない）
+  const s30 = sampleSlot(0.61, 0.120, 0.71, 0.175);
+  console.log("Slot 30 stats:", s30);
+  let slot30 = "A";
+  if (s30.brownPixels > s30.redPixels && (s30.avgR - s30.avgG) < 60) {
+    slot30 = "B"; // カカオ
+  } else {
+    slot30 = "A"; // トマト
+  }
+
+  // 3. Lv.60: トマト (A) / カカオ (B) / じゃがいも (C) の3択判定
+  const s60 = sampleSlot(0.77, 0.120, 0.87, 0.175);
+  console.log("Slot 60 stats:", s60);
+  let slot60 = "A";
+
+  // トマトの判定: 赤ピクセルが優勢
+  if (s60.redPixels > s60.brownPixels && s60.redPixels > s60.brightPotatoPixels && (s60.avgR - s60.avgG) > 45) {
+    slot60 = "A"; // トマト
+  }
+  // じゃがいもの判定: 明るいベージュ色（GとBが高い）
+  else if (s60.brightPotatoPixels > s60.brownPixels && s60.avgG > 130 && s60.avgB > 85) {
+    slot60 = "C"; // じゃがいも
+  }
+  // カカオの判定: 濃い茶色
+  else {
+    slot60 = "B"; // カカオ
+  }
+
   const pattern = getIngredientPattern(slot1, slot30, slot60);
+  console.log(`Detected Ingredients: [${slot1}, ${slot30}, ${slot60}] => Pattern: ${pattern}`);
 
   return {
     ingredients: [slot1, slot30, slot60],
@@ -237,7 +241,7 @@ export function detectIngredientsFromCanvas(img) {
 }
 
 export async function analyzeScreenshot(imageElement, onProgress) {
-  // 食材色判定（syokuzai.pngプロファイル）
+  // 食材色判定
   const ingRes = detectIngredientsFromCanvas(imageElement);
 
   // OCR
@@ -259,11 +263,10 @@ export async function analyzeScreenshot(imageElement, onProgress) {
   // SP
   result.sp = extractSP(text);
 
-  // ポケモン名・直取りの精密判定
+  // ポケモン名・直取り
   let detectedName = null;
   for (const line of lines) {
     const t = line.text.replace(/[\s\r\n]/g, '');
-    // "Lv.16カヌチャン" 等から名前を抽出
     const match = t.match(/Lv\.?[0-9]+([^\s0-9:：]+)/i);
     if (match && match[1].length >= 2) {
       detectedName = match[1];
@@ -284,7 +287,6 @@ export async function analyzeScreenshot(imageElement, onProgress) {
     result.catchType = "kanuchan";
     result.isTarget = true;
   } else {
-    // カヌチャン系以外のポケモンがアップロードされた場合
     result.pokemonName = detectedName || "対象外ポケモン";
     result.catchType = "other";
     result.isTarget = false;

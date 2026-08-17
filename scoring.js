@@ -30,23 +30,19 @@ export const INGREDIENTS = {
   C: { name: "ほっこりポテト", short: "じゃがいも", code: "C" }
 };
 
-// 食材構成パターン配点
+// カヌチャン系で実際に存在する6通りの食材パターン配点
 export const INGREDIENT_SCORES = {
   "AAA": { score: 100, label: "AAA (トマト/トマト/トマト)" },
   "ABB": { score: 60,  label: "ABB (トマト/カカオ/カカオ)" },
   "ABC": { score: 20,  label: "ABC (トマト/カカオ/じゃがいも)" },
   "AAB": { score: 10,  label: "AAB (トマト/トマト/カカオ)" },
   "AAC": { score: 10,  label: "AAC (トマト/トマト/じゃがいも)" },
-  "ABA": { score: 10,  label: "ABA (トマト/カカオ/トマト)" },
-  "ACA": { score: 10,  label: "ACA (トマト/じゃがいも/トマト)" },
-  "ACB": { score: 20,  label: "ACB (トマト/じゃがいも/カカオ)" },
-  "ACC": { score: 10,  label: "ACC (トマト/じゃがいも/じゃがいも)" },
-  "GEEL": { score: -30, label: "ギール (-30点)" },
+  "ABA": { score: -30, label: "ギール/ABA (トマト/カカオ/トマト)" },
   "OTHER": { score: 0,  label: "未選択 / その他" }
 };
 
 /**
- * 3枠の食材からパターンコード（AAA, AAB等）を判定
+ * 3枠の食材からパターンコードを判定
  */
 export function getIngredientPattern(slot1 = "A", slot30 = "A", slot60 = "A") {
   const pattern = `${slot1}${slot30}${slot60}`;
@@ -189,7 +185,7 @@ export function calculateTotalScore(state) {
     ingPattern = getIngredientPattern(state.ingredients[0], state.ingredients[1], state.ingredients[2]);
   }
   const ingData = INGREDIENT_SCORES[ingPattern] || INGREDIENT_SCORES["OTHER"];
-  if (ingData.score !== 0) {
+  if (ingData && ingData.score !== 0) {
     details.push({
       category: "食材構成",
       name: ingData.label,
