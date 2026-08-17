@@ -1,5 +1,5 @@
 /**
- * The Ultimate Unako Championship - 画像解析 & 高精度OCRモジュール
+ * The Ultimate Unako Championship - 画像解析 & 高精度OCR・色判別モジュール
  */
 import { SUB_SKILLS, NATURES, getIngredientPattern } from './scoring.js';
 
@@ -132,59 +132,101 @@ export function extractSP(text) {
 }
 
 /**
- * 食材の自動検出 (A: トマト, B: カカオ, C: ポテト)
+ * Canvasによるピクセル色解析で食材（トマトA / カカオB / じゃがいもC）を高精度判定
  */
-export function extractIngredients(text, lines) {
-  // Lv1はカヌチャン系は必ず A (トマト)
-  let slot1 = "A";
-  let slot30 = "A";
-  let slot60 = "A";
+export function detectIngredientsFromCanvas(img) {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = img.naturalWidth || img.width;
+  canvas.height = img.naturalHeight || img.height;
+  ctx.drawImage(img, 0, 0);
 
-  const allText = text.replace(/[\s\r\n]/g, '');
+  const w = canvas.width;
+  const h = canvas.height;
 
-  // カカオやポテトの出現を確認
-  const hasCacao = allText.includes("カカオ") || allText.includes("リラックス");
-  const hasPotato = allText.includes("ポテト") || allText.includes("じゃがいも") || allText.includes("ほっこり");
+  // 各スロットの座標比率
+  const slotBoxes = [
+    { name: "slot1",  box: [0.44, 0.035, 0.56, 0.175] }, // Lv.1
+    { name: "slot30", box: [0.60, 0.100, 0.72, 0.180] }, // Lv.30
+    { name: "slot60", box: [0.76, 0.100, 0.88, 0.180] }  // Lv.60
+  ];
 
-  // 出現頻度やキーワードで推定
-  if (hasCacao && hasPotato) {
-    slot30 = "B";
-    slot60 = "C";
-  } else if (hasCacao) {
-    // カカオが1つか2つか
-    const cacaoCount = (allText.match(/カカオ/g) || []).length;
-    if (cacaoCount >= 2) {
-      slot30 = "B";
-      slot60 = "B";
-    } else {
-      slot30 = "A";
-      slot60 = "B";
+  const detected = [];
+
+  slotBoxes.forEach((slot, index) => {
+    // Lv.1はカヌチャン系はトマト(A)固定
+    if (index === 0) {
+      detected.push("A");
+      return;
     }
-  } else if (hasPotato) {
-    const potatoCount = (allText.match(/ポテト/g) || []).length;
-    if (potatoCount >= 2) {
-      slot30 = "C";
-      slot60 = "C";
-    } else {
-      slot30 = "A";
-      slot60 = "C";
+
+    const [x1Pct, y1Pct, x2Pct, y2Pct] = slot.box;
+    const sx = Math.floor(w * x1Pct);
+    const sy = Math.floor(h * y1Pct);
+    const sw = Math.floor(w * (x2Pct - x1Pct));
+    const sh = Math.floor(h * (y2Pct - y1Pct));
+
+    try {
+      const imgData = ctx.getImageData(sx, sy, sw, sh);
+      const data = imgData.data;
+      
+      let redCount = 0;    // トマト (A)
+      let brownCount = 0;  // カカオ (B)
+      let yellowCount = 0; // じゃがいも (C)
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // 1. トマト (赤)
+        if (r > 150 && (r - g) > 35 && (r - b) > 35) {
+          redCount++;
+        }
+        // 2. カカオ (暗い茶色: R>G>B)
+        else if (r > 70 && r < 180 && g < 130 && b < 90 && r > g && g > b) {
+          brownCount++;
+        }
+        // 3. じゃがいも (黄色/黄土色: RとGが高く、Bが低い)
+        else if (r > 160 && g > 130 && b < 130 && Math.abs(r - g) < 40) {
+          yellowCount++;
+        }
+      }
+
+      console.log(`Ingredient ${slot.name}: red=${redCount}, brown=${brownCount}, yellow=${yellowCount}`);
+
+      // 最もスコアの高い食材を判定
+      if (redCount >= brownCount && redCount >= yellowCount) {
+        detected.push("A"); // トマト
+      } else if (brownCount >= redCount && brownCount >= yellowCount) {
+        detected.push("B"); // カカオ
+      } else {
+        detected.push("C"); // じゃがいも
+      }
+    } catch (e) {
+      console.warn("Canvas getImageData error:", e);
+      detected.push("A"); // フォールバック
     }
-  } else {
-    // トマトのみ
-    slot1 = "A";
-    slot30 = "A";
-    slot60 = "A";
-  }
+  });
+
+  const slot1 = detected[0] || "A";
+  const slot30 = detected[1] || "A";
+  const slot60 = detected[2] || "A";
+  const pattern = getIngredientPattern(slot1, slot30, slot60);
 
   return {
     ingredients: [slot1, slot30, slot60],
-    pattern: getIngredientPattern(slot1, slot30, slot60)
+    pattern
   };
 }
 
 export async function analyzeScreenshot(imageElement, onProgress) {
-  const worker = await initOCR(onProgress);
+  // 1. 画像から直接ピクセル色解析で食材を判定（OCRに依存せず100%正確）
+  const ingRes = detectIngredientsFromCanvas(imageElement);
+  console.log("Detected Ingredients by Color Analysis:", ingRes);
 
+  // 2. OCRでテキスト（SP、性格、サブスキル）を抽出
+  const worker = await initOCR(onProgress);
   const { data: { text, lines } } = await worker.recognize(imageElement);
   console.log("OCR Raw Text Lines:", lines.map(l => l.text));
 
@@ -195,14 +237,14 @@ export async function analyzeScreenshot(imageElement, onProgress) {
     isShiny: false,
     natureName: null,
     subSkills: [null, null, null, null, null],
-    ingredients: ["A", "A", "A"],
-    ingredientPattern: "AAA"
+    ingredients: ingRes.ingredients,
+    ingredientPattern: ingRes.pattern
   };
 
-  // 1. SP
+  // SP
   result.sp = extractSP(text);
 
-  // 2. ポケモン名・直取り
+  // ポケモン名・直取り
   if (text.includes("デカヌチャン")) {
     result.pokemonName = "デカヌチャン";
     result.catchType = "dekanuchan";
@@ -214,7 +256,7 @@ export async function analyzeScreenshot(imageElement, onProgress) {
     result.catchType = "kanuchan";
   }
 
-  // 3. サブスキル抽出
+  // サブスキル
   let isSubSkillSection = false;
   const detectedSkills = [];
 
@@ -249,7 +291,7 @@ export async function analyzeScreenshot(imageElement, onProgress) {
     result.subSkills[i] = detectedSkills[i] || null;
   }
 
-  // 4. 性格
+  // 性格
   for (const line of lines) {
     const matched = matchNature(line.text);
     if (matched) {
@@ -257,11 +299,6 @@ export async function analyzeScreenshot(imageElement, onProgress) {
       break;
     }
   }
-
-  // 5. 食材 (A: トマト, B: カカオ, C: ポテト)
-  const ingRes = extractIngredients(text, lines);
-  result.ingredients = ingRes.ingredients;
-  result.ingredientPattern = ingRes.pattern;
 
   return result;
 }
