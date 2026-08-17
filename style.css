@@ -36,33 +36,29 @@ body {
 /* ヘッダー */
 header {
   text-align: center;
-  margin-bottom: 16px;
-  padding: 12px 0 6px;
+  margin-bottom: 20px;
+  padding: 16px 0 8px;
 }
 
-.title-badge {
+.flashy-title {
+  font-size: 1.85rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #ff007f 0%, #ff529a 50%, #ff80bf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(255, 0, 128, 0.35));
   display: inline-block;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 20px;
-  letter-spacing: 0.05em;
-  margin-bottom: 6px;
-  box-shadow: 0 2px 8px rgba(242, 109, 145, 0.3);
-}
-
-h1 {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--text-main);
+  transform: perspective(400px) rotateX(4deg);
+  margin: 4px 0 6px;
+  line-height: 1.25;
 }
 
 .subtitle {
   font-size: 0.8rem;
-  color: var(--text-sub);
-  margin-top: 2px;
+  font-weight: 700;
+  color: #d8456f;
+  letter-spacing: 0.08em;
 }
 
 /* 画像ドロップエリア */
