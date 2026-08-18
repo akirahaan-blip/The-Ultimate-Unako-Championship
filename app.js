@@ -9,9 +9,9 @@ import {
   NATURE_SCORES,
   NATURES,
   calculateTotalScore
-} from './scoring.js?v=6';
-import { analyzeScreenshot } from './ocr.js?v=6';
-import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=6';
+} from './scoring.js?v=7';
+import { analyzeScreenshot } from './ocr.js?v=7';
+import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=7';
 
 // 現在の状態
 let state = {
@@ -305,7 +305,7 @@ let lampsLit = false;
 
 /**
  * ヘッダーのハイビスカスランプを点けたり消したりする。
- * 消灯から点灯に変わった時だけ、跳ねる演出を1回だけ足す。
+ * 消灯中は display:none なので、点くたびに出現アニメーションが頭から流れる。
  */
 function updateLamps(totalScore) {
   const lamps = [document.getElementById("lampLeft"), document.getElementById("lampRight")];
@@ -315,15 +315,7 @@ function updateLamps(totalScore) {
   if (shouldLight === lampsLit) return;
   lampsLit = shouldLight;
 
-  lamps.forEach(el => {
-    el.classList.remove("just-lit");
-    el.classList.toggle("lit", shouldLight);
-    if (shouldLight) {
-      // クラスを付け直してアニメーションを頭から流し直す
-      void el.offsetWidth;
-      el.classList.add("just-lit");
-    }
-  });
+  lamps.forEach(el => el.classList.toggle("lit", shouldLight));
 }
 
 /**
