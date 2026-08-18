@@ -9,9 +9,9 @@ import {
   NATURE_SCORES,
   NATURES,
   calculateTotalScore
-} from './scoring.js?v=8';
-import { analyzeScreenshot } from './ocr.js?v=8';
-import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=8';
+} from './scoring.js?v=9';
+import { analyzeScreenshot } from './ocr.js?v=9';
+import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=9';
 
 // 現在の状態
 let state = {
@@ -299,9 +299,10 @@ async function handleImageUpload(file) {
 
 const SLOT_LEVELS = [10, 25, 50, 70, 80];
 
-// ハイビスカスランプが点灯する点数。これを「超えたら」点く
-const LAMP_THRESHOLD = 1000;
-let lampsLit = false;
+// ハイビスカスランプの点灯条件。どちらも「その点数以上」で成立する
+const LAMP_THRESHOLD = 900;       // 左右が交互に点滅
+const LAMP_SOLO_THRESHOLD = 1000; // 左だけ点滅（沖ドキの「左のみ」）
+let lampTier = 0;
 
 /**
  * ヘッダーのハイビスカスランプを点けたり消したりする。
@@ -311,11 +312,16 @@ function updateLamps(totalScore) {
   const lamps = [document.getElementById("lampLeft"), document.getElementById("lampRight")];
   if (lamps.some(el => !el)) return;
 
-  const shouldLight = totalScore > LAMP_THRESHOLD;
-  if (shouldLight === lampsLit) return;
-  lampsLit = shouldLight;
+  const tier =
+    totalScore >= LAMP_SOLO_THRESHOLD ? 2 :
+    totalScore >= LAMP_THRESHOLD ? 1 : 0;
+  if (tier === lampTier) return;
+  lampTier = tier;
 
-  lamps.forEach(el => el.classList.toggle("lit", shouldLight));
+  lamps.forEach(el => {
+    el.classList.toggle("lit", tier > 0);
+    el.classList.toggle("solo", tier === 2);
+  });
 }
 
 /**

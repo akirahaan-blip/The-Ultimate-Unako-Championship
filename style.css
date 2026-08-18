@@ -79,6 +79,12 @@ header {
   animation-delay: var(--appear-dur), calc(var(--appear-dur) + var(--blink-cycle) / 2);
 }
 
+/* 上位の点灯（1000点以上）は「左のみ点滅」。
+   右を消すことで、交互点滅とはっきり見分けが付くようにしている。 */
+#lampRight.solo {
+  display: none;
+}
+
 /* 出てくる瞬間。ネオン管が点きかけるようにチカチカしてから安定する。
    点滅が速すぎると目に負担なので、明滅は1.5秒で4回までに抑えている。 */
 @keyframes lampFlickerIn {
