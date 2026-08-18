@@ -17,7 +17,7 @@
  * PROTOTYPES に1行足す。
  */
 
-import { isLockBadge } from './layout.js?v=4';
+import { isLockBadge } from './layout.js?v=8';
 
 export const HUE_BINS = 24;
 

@@ -9,15 +9,15 @@
  * 返すのは「ゲーム側の事実」だけ。
  * 大会のコード（A/B/C）や配点への変換は、使う側のアプリで行うこと。
  */
-import { SUB_SKILLS, NATURES, SUB_SKILL_LEVELS, INGREDIENT_LEVELS } from './gamedata.js?v=4';
-import { detectLayout, readPixels } from './layout.js?v=4';
-import { classifyIngredientSlot } from './ingredients.js?v=4';
-import { matchSubSkill, matchNature, extractSP, normalizeText } from './matching.js?v=4';
+import { SUB_SKILLS, NATURES, SUB_SKILL_LEVELS, INGREDIENT_LEVELS } from './gamedata.js?v=8';
+import { detectLayout, readPixels } from './layout.js?v=8';
+import { classifyIngredientSlot } from './ingredients.js?v=8';
+import { matchSubSkill, matchNature, extractSP, normalizeText } from './matching.js?v=8';
 
-export { SUB_SKILLS, NATURES, STATS, SUB_SKILL_LEVELS, INGREDIENT_LEVELS } from './gamedata.js?v=4';
-export { detectLayout } from './layout.js?v=4';
-export { PROTOTYPES, describeIcon, classifyIngredientSlot } from './ingredients.js?v=4';
-export { normalizeText, similarity, matchSubSkill, matchNature, extractSP } from './matching.js?v=4';
+export { SUB_SKILLS, NATURES, STATS, SUB_SKILL_LEVELS, INGREDIENT_LEVELS } from './gamedata.js?v=8';
+export { detectLayout } from './layout.js?v=8';
+export { PROTOTYPES, describeIcon, classifyIngredientSlot } from './ingredients.js?v=8';
+export { normalizeText, similarity, matchSubSkill, matchNature, extractSP } from './matching.js?v=8';
 
 let worker = null;
 
@@ -194,6 +194,18 @@ export async function readStatusScreen(image, options = {}) {
     result.raw.header = text;
     log('[ヘッダー]', JSON.stringify(text));
     result.sp = extractSP(text);
+
+    // スクショの切り取り位置によっては、SPが画像のいちばん上ギリギリに来て
+    // 標準の切り出しから外れる。読めなかった時だけ上端まで含めて読み直す。
+    // 逆に最初から広く取ると、余白が増えて別のスクショで数字を落とすので、
+    // あくまで駄目だった時の保険として二段構えにしている。
+    if (!result.sp) {
+      const topBox = { ...box, y0: 0 };
+      const retry = await recognize(w, cropForOCR(base, topBox, 300), { whitelist: chars, singleLine: false });
+      log('[ヘッダー] SP再試行', JSON.stringify(retry));
+      const sp = extractSP(retry);
+      if (sp) { result.sp = sp; result.raw.headerTop = retry; }
+    }
   } catch (e) {
     console.warn('[ヘッダー] 読み取り失敗', e);
   }

@@ -4,7 +4,7 @@
  * サブスキル17種・性格25種という「閉じた候補集合」が相手なので、
  * 多少読み違えていても正解に寄せられる。
  */
-import { SUB_SKILLS, NATURES } from './gamedata.js?v=4';
+import { SUB_SKILLS, NATURES } from './gamedata.js?v=8';
 
 // 半角化・長音記号の統一・小書き仮名の統一・漢字とカタカナのそっくりさん対策。
 // OCR結果と候補名の両方に同じ処理をかけてから比較すること。

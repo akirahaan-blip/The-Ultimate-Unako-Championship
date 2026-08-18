@@ -9,7 +9,7 @@
  * 画面表示とは別に余白や文字サイズを詰めた方が読みやすいため、
  * 同じ内容を Canvas に描き直している。
  */
-import { SUB_SKILLS, INGREDIENTS, INGREDIENT_SCORES, NATURES, NATURE_SCORES } from './scoring.js?v=7';
+import { SUB_SKILLS, INGREDIENTS, INGREDIENT_SCORES, NATURES, NATURE_SCORES } from './scoring.js?v=8';
 
 export const HASHTAG = '#最強うなこ決定戦';
 
