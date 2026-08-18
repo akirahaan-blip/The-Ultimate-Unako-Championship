@@ -7,8 +7,8 @@
  *   ・ポケモン名 → 直取りボーナスの種別
  *   ・カヌチャンの Lv.1 は必ず あんみんトマト、という前提の適用
  */
-import { getIngredientPattern } from './scoring.js?v=4';
-import { readStatusScreen, initOCR } from './vendor/pokesleep-vision/index.js?v=4';
+import { getIngredientPattern } from './scoring.js?v=6';
+import { readStatusScreen, initOCR } from './vendor/pokesleep-vision/index.js?v=6';
 
 export { initOCR };
 

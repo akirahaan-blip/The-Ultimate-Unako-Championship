@@ -42,6 +42,58 @@ header {
 
 .mascot-wrap {
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* ハイビスカスランプ。既定は消灯（暗く沈めておく）、1000点超えで .lit が付いて点灯する */
+.hibiscus-lamp {
+  width: 88px;
+  max-width: 24vw;
+  height: auto;
+  filter: grayscale(0.85) brightness(0.5) contrast(0.9);
+  opacity: 0.3;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+/* 点灯した見た目は filter をここでも指定しておく。
+   アニメーション任せにすると、動きを止めている環境（省電力・裏タブ・
+   prefers-reduced-motion）で消灯時のグレーのままになってしまう。
+   アニメーションは、その上に脈打つ光を重ねるだけの役目にする。 */
+.hibiscus-lamp.lit {
+  opacity: 1;
+  transform: scale(1.06);
+  filter: saturate(1.15) brightness(1.05) drop-shadow(0 0 12px rgba(255, 140, 30, 0.85));
+  animation: lampGlow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes lampGlow {
+  from {
+    filter: saturate(1.05) brightness(1) drop-shadow(0 0 6px rgba(255, 150, 40, 0.7));
+  }
+  to {
+    filter: saturate(1.3) brightness(1.12) drop-shadow(0 0 22px rgba(255, 120, 20, 0.95));
+  }
+}
+
+/* 点灯した瞬間だけ跳ねる */
+.hibiscus-lamp.just-lit {
+  animation: lampGlow 1.5s ease-in-out infinite alternate, lampPop 0.6s ease-out;
+}
+
+@keyframes lampPop {
+  0%   { transform: scale(0.8) rotate(-6deg); }
+  55%  { transform: scale(1.22) rotate(4deg); }
+  100% { transform: scale(1.06) rotate(0deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hibiscus-lamp.lit,
+  .hibiscus-lamp.just-lit {
+    animation: none;
+  }
 }
 
 .header-mascot {

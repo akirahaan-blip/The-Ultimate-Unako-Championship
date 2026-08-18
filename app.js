@@ -9,9 +9,9 @@ import {
   NATURE_SCORES,
   NATURES,
   calculateTotalScore
-} from './scoring.js?v=4';
-import { analyzeScreenshot } from './ocr.js?v=4';
-import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=4';
+} from './scoring.js?v=6';
+import { analyzeScreenshot } from './ocr.js?v=6';
+import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=6';
 
 // 現在の状態
 let state = {
@@ -299,6 +299,33 @@ async function handleImageUpload(file) {
 
 const SLOT_LEVELS = [10, 25, 50, 70, 80];
 
+// ハイビスカスランプが点灯する点数。これを「超えたら」点く
+const LAMP_THRESHOLD = 1000;
+let lampsLit = false;
+
+/**
+ * ヘッダーのハイビスカスランプを点けたり消したりする。
+ * 消灯から点灯に変わった時だけ、跳ねる演出を1回だけ足す。
+ */
+function updateLamps(totalScore) {
+  const lamps = [document.getElementById("lampLeft"), document.getElementById("lampRight")];
+  if (lamps.some(el => !el)) return;
+
+  const shouldLight = totalScore > LAMP_THRESHOLD;
+  if (shouldLight === lampsLit) return;
+  lampsLit = shouldLight;
+
+  lamps.forEach(el => {
+    el.classList.remove("just-lit");
+    el.classList.toggle("lit", shouldLight);
+    if (shouldLight) {
+      // クラスを付け直してアニメーションを頭から流し直す
+      void el.offsetWidth;
+      el.classList.add("just-lit");
+    }
+  });
+}
+
 /**
  * 何がスクショから読めて、何が読めなかったのかを一覧で出す。
  * OCRは完璧にはならないので、ユーザーがどこを直せばいいか一目で分かるようにする。
@@ -398,6 +425,7 @@ function recalculateAndRender() {
   const result = calculateTotalScore(state);
 
   scoreValEl.textContent = result.totalScore;
+  updateLamps(result.totalScore);
 
   const shinyText = state.isShiny ? "★ " : "";
   cardPokemonNameEl.textContent = `${shinyText}${state.pokemonName}`;

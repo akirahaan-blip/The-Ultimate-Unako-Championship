@@ -6,7 +6,7 @@
   <title>＼最強うなこ決定戦／ スコア判定</title>
   <!-- ?v= はキャッシュ避け。JS/CSSを更新したらこの数字を上げること。
        これがないと、以前このページを開いた人のブラウザが古いファイルを掴んだままになる。 -->
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
   <!-- Tesseract.js CDN (クライアントサイドOCR) -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
@@ -14,7 +14,10 @@
 
   <header>
     <div class="mascot-wrap">
+      <!-- ハイビスカスランプ。1000点超えで点灯する（消灯時は暗く沈める） -->
+      <img src="left-lamp.png" alt="" class="hibiscus-lamp" id="lampLeft">
       <img src="tabako.png" alt="うなこ" class="header-mascot">
+      <img src="right-lamp.png" alt="" class="hibiscus-lamp" id="lampRight">
     </div>
     <h1 class="flashy-title">＼最強うなこ決定戦／</h1>
     <div class="subtitle">The Ultimate Unako Championship</div>
@@ -160,6 +163,6 @@
   <h2 class="section-title">保存履歴</h2>
   <div class="form-group" id="historyList"></div>
 
-  <script type="module" src="app.js?v=5"></script>
+  <script type="module" src="app.js?v=6"></script>
 </body>
 </html>
