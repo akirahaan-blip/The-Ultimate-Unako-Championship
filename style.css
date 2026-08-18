@@ -80,9 +80,14 @@ header {
 }
 
 /* 上位の点灯（1000点以上）は「左のみ点滅」。
-   右を消すことで、交互点滅とはっきり見分けが付くようにしている。 */
+   右は消灯した花として暗いまま置いておく。
+   display:none にすると幅がなくなって中央のマスコットが左へずれるので、
+   場所は保ったまま光らせないようにしている。 */
 #lampRight.solo {
-  display: none;
+  animation: none;
+  transform: scale(1.06);
+  opacity: 0.3;
+  filter: grayscale(0.8) brightness(0.5) contrast(1.05);
 }
 
 /* 出てくる瞬間。ネオン管が点きかけるようにチカチカしてから安定する。
