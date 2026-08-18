@@ -7,8 +7,7 @@
  */
 import { SUB_SKILLS as SUB_SKILL_MASTER, NATURES as NATURE_MASTER } from './vendor/pokesleep-vision/gamedata.js?v=4';
 
-// サブスキルの大会配点。isGold は「オール金スキルボーナス」の対象かどうか、
-// upgradeTo は銀種で1段上げた時の行き先。
+// サブスキルの大会配点。isGold は「オール金スキルボーナス」の対象かどうか。
 const SUB_SKILL_POINTS = {
   kinomi_s:   { score: 200, isGold: true },
   otebo:      { score: 150, isGold: true },
@@ -17,20 +16,23 @@ const SUB_SKILL_POINTS = {
   yume_bo:    { score: 80,  isGold: true },
   gen_bo:     { score: 80,  isGold: true },
   skileve_m:  { score: 80,  isGold: true },
-  skileve_s:  { score: 40,  isGold: false, upgradeTo: 'skileve_m' },
+  skileve_s:  { score: 40,  isGold: false },
   speed_m:    { score: 120, isGold: false },
-  speed_s:    { score: 80,  isGold: false, upgradeTo: 'speed_m' },
+  speed_s:    { score: 80,  isGold: false },
   skill_m:    { score: 80,  isGold: false },
-  skill_s:    { score: 40,  isGold: false, upgradeTo: 'skill_m' },
+  skill_s:    { score: 40,  isGold: false },
   shokuzai_m: { score: 10,  isGold: false },
-  shokuzai_s: { score: 0,   isGold: false, upgradeTo: 'shokuzai_m' },
+  shokuzai_s: { score: 0,   isGold: false },
   shoji_l:    { score: 70,  isGold: false },
-  shoji_m:    { score: 50,  isGold: false, upgradeTo: 'shoji_l' },
-  shoji_s:    { score: 30,  isGold: false, upgradeTo: 'shoji_m' }
+  shoji_m:    { score: 50,  isGold: false },
+  shoji_s:    { score: 30,  isGold: false }
 };
 
 // マスタ（id / name / short / aliases）に大会の配点を合成する
-export const SUB_SKILLS = SUB_SKILL_MASTER.map(s => ({ ...s, ...SUB_SKILL_POINTS[s.id] }));
+export const SUB_SKILLS = SUB_SKILL_MASTER.map(s => ({
+  ...s,
+  ...SUB_SKILL_POINTS[s.id]
+}));
 
 // 食材定義（A: トマト, B: カカオ, C: じゃがいも）
 export const INGREDIENTS = {
@@ -65,20 +67,20 @@ export function getIngredientPattern(slot1 = "A", slot30 = "A", slot60 = "A") {
 // short は結果カード用の略称。name をそのまま並べると1行に収まらないため。
 export const NATURE_SCORES = {
   up: {
-    "speed": { name: "おてつだいスピード", short: "スピ", score: 100, label: "スピ↑↑ (+100)" },
-    "exp": { name: "獲得EXP", short: "EXP", score: 90, label: "EXP↑↑ (+90)" },
-    "skill": { name: "メインスキル発生確率", short: "スキル", score: 60, label: "スキル↑↑ (+60)" },
-    "energy": { name: "げんき回復量", short: "げんき", score: 40, label: "げんき↑↑ (+40)" },
-    "ingredient": { name: "食材おてつだい確率", short: "食材", score: 0, label: "食材↑↑ (+0)" },
-    "none": { name: "なし", short: "なし", score: 0, label: "なし (+0)" }
+    "speed":      { name: "おてつだいスピード", short: "スピ",   score: 100, label: "スピ↑↑ (+100)" },
+    "exp":        { name: "獲得EXP",           short: "EXP",    score: 90,  label: "EXP↑↑ (+90)" },
+    "skill":      { name: "メインスキル発生確率", short: "スキル", score: 60,  label: "スキル↑↑ (+60)" },
+    "energy":     { name: "げんき回復量",       short: "げんき", score: 40,  label: "げんき↑↑ (+40)" },
+    "ingredient": { name: "食材おてつだい確率", short: "食材",   score: 0,   label: "食材↑↑ (+0)" },
+    "none":       { name: "なし",               short: "なし",   score: 0,   label: "なし (+0)" }
   },
   down: {
-    "ingredient": { name: "食材おてつだい確率", short: "食材", score: 40, label: "食材↓↓ (+40)" },
-    "energy": { name: "げんき回復量", short: "げんき", score: 0, label: "げんき↓↓ (+0)" },
-    "skill": { name: "メインスキル発生確率", short: "スキル", score: -20, label: "スキル↓↓ (-20)" },
-    "exp": { name: "獲得EXP", short: "EXP", score: -30, label: "EXP↓↓ (-30)" },
-    "speed": { name: "おてつだいスピード", short: "スピ", score: -50, label: "スピ↓↓ (-50)" },
-    "none": { name: "なし", short: "なし", score: 0, label: "なし (+0)" }
+    "ingredient": { name: "食材おてつだい確率", short: "食材",   score: 40,  label: "食材↓↓ (+40)" },
+    "energy":     { name: "げんき回復量",       short: "げんき", score: 0,   label: "げんき↓↓ (+0)" },
+    "skill":      { name: "メインスキル発生確率", short: "スキル", score: -20, label: "スキル↓↓ (-20)" },
+    "exp":        { name: "獲得EXP",           short: "EXP",    score: -30, label: "EXP↓↓ (-30)" },
+    "speed":      { name: "おてつだいスピード", short: "スピ",   score: -50, label: "スピ↓↓ (-50)" },
+    "none":       { name: "なし",               short: "なし",   score: 0,   label: "なし (+0)" }
   }
 };
 
@@ -95,15 +97,12 @@ export function calculateSpBonus(sp) {
   if (sp === 777) {
     return { score: 200, reason: "SP 777 ボーナス (+200)" };
   }
-
   if (spStr.length >= 2 && spStr.split('').every(c => c === spStr[0])) {
     return { score: 100, reason: `SP ゾロ目ボーナス (${sp}) (+100)` };
   }
-
   if (spStr.length >= 3 && sp % 100 === 0) {
     return { score: 50, reason: `SP キリ番ボーナス (${sp}) (+50)` };
   }
-
   return { score: 0, reason: null };
 }
 
@@ -128,28 +127,13 @@ export function calculateTotalScore(state) {
 
     if (skillObj) {
       subSkillObjects.push({ ...skillObj, slotIndex: i, lv, rate });
-      let baseScore = skillObj.score;
-      
-      const isSilverSeeded = state.silverSeeds?.[i] === true;
-      let finalSkillScore = baseScore;
-
-      if (isSilverSeeded && skillObj.upgradeTo) {
-        const upgradedObj = SUB_SKILLS.find(s => s.id === skillObj.upgradeTo);
-        if (upgradedObj) {
-          const diff = upgradedObj.score - baseScore;
-          finalSkillScore = baseScore + Math.round(diff / 2);
-        }
-      }
-
-      const discountedScore = Math.round(finalSkillScore * rate);
+      const baseScore = skillObj.score;
+      const discountedScore = Math.round(baseScore * rate);
       subSkillTotal += discountedScore;
 
       let discountText = "";
       if (rate < 1.0) {
         discountText = ` (Lv.${lv}枠 ${Math.round((1 - rate) * 100)}%引)`;
-      }
-      if (isSilverSeeded) {
-        discountText += " [銀種]";
       }
 
       details.push({
@@ -170,11 +154,7 @@ export function calculateTotalScore(state) {
   }
   const ingData = INGREDIENT_SCORES[ingPattern] || INGREDIENT_SCORES["OTHER"];
   if (ingData && ingData.score !== 0) {
-    details.push({
-      category: "食材構成",
-      name: ingData.label,
-      score: ingData.score
-    });
+    details.push({ category: "食材構成", name: ingData.label, score: ingData.score });
     totalScore += ingData.score;
   }
 
@@ -188,7 +168,6 @@ export function calculateTotalScore(state) {
       natureDown = foundNature.down;
     }
   }
-
   const upObj = NATURE_SCORES.up[natureUp] || NATURE_SCORES.up["none"];
   const downObj = NATURE_SCORES.down[natureDown] || NATURE_SCORES.down["none"];
   const natureTotal = upObj.score + downObj.score;
@@ -204,49 +183,29 @@ export function calculateTotalScore(state) {
 
   // 4. 色違いボーナス (+350)
   if (state.isShiny) {
-    details.push({
-      category: "特別ボーナス",
-      name: "★ 色違いボーナス",
-      score: 350
-    });
+    details.push({ category: "特別ボーナス", name: "★ 色違いボーナス", score: 350 });
     totalScore += 350;
   }
 
   // 5. SPボーナス
   const spBonus = calculateSpBonus(state.sp);
   if (spBonus.score > 0) {
-    details.push({
-      category: "特別ボーナス",
-      name: spBonus.reason,
-      score: spBonus.score
-    });
+    details.push({ category: "特別ボーナス", name: spBonus.reason, score: spBonus.score });
     totalScore += spBonus.score;
   }
 
   // 6. 直取りボーナス
   if (state.catchType === "dekanuchan") {
-    details.push({
-      category: "特別ボーナス",
-      name: "デカヌチャン直取りボーナス",
-      score: 150
-    });
+    details.push({ category: "特別ボーナス", name: "デカヌチャン直取りボーナス", score: 150 });
     totalScore += 150;
   } else if (state.catchType === "nakanuchan") {
-    details.push({
-      category: "特別ボーナス",
-      name: "ナカヌチャン直取りボーナス",
-      score: 50
-    });
+    details.push({ category: "特別ボーナス", name: "ナカヌチャン直取りボーナス", score: 50 });
     totalScore += 50;
   }
 
   // 7. FL10以内ボーナス (+100)
   if (state.isFlUnder10) {
-    details.push({
-      category: "特別ボーナス",
-      name: "FL10以内ボーナス",
-      score: 100
-    });
+    details.push({ category: "特別ボーナス", name: "FL10以内ボーナス", score: 100 });
     totalScore += 100;
   }
 
@@ -262,7 +221,6 @@ export function calculateTotalScore(state) {
     const minRate = Math.min(...artifactSkills.map(s => s.rate));
     const comboScore = Math.round(100 * minRate);
     const rateText = minRate < 1.0 ? ` (${Math.round((1 - minRate) * 100)}%引適用)` : "";
-
     details.push({
       category: "コンボボーナス",
       name: `3種の神器ボーナス (おて/きの/睡ボ)${rateText}`,
@@ -279,7 +237,6 @@ export function calculateTotalScore(state) {
     const minRate = Math.min(...shojiSkills.map(s => s.rate));
     const comboScore = Math.round(100 * minRate);
     const rateText = minRate < 1.0 ? ` (${Math.round((1 - minRate) * 100)}%引適用)` : "";
-
     details.push({
       category: "コンボボーナス",
       name: `こてい個体ボーナス (所持数S+M+L)${rateText}`,
@@ -292,7 +249,6 @@ export function calculateTotalScore(state) {
     const minRate = Math.min(...validSkills.map(s => s.rate));
     const comboScore = Math.round(200 * minRate);
     const rateText = minRate < 1.0 ? ` (${Math.round((1 - minRate) * 100)}%引適用)` : "";
-
     details.push({
       category: "コンボボーナス",
       name: `オール金スキルボーナス${rateText}`,
@@ -303,16 +259,9 @@ export function calculateTotalScore(state) {
 
   // 9. リサ配ボーナス (+70)
   if (state.isStreamBonus) {
-    details.push({
-      category: "特別ボーナス",
-      name: "リサ配ボーナス (配信)",
-      score: 70
-    });
+    details.push({ category: "特別ボーナス", name: "リサ配ボーナス (配信)", score: 70 });
     totalScore += 70;
   }
 
-  return {
-    totalScore,
-    details
-  };
+  return { totalScore, details };
 }
