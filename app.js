@@ -9,9 +9,9 @@ import {
   NATURE_SCORES,
   NATURES,
   calculateTotalScore
-} from './scoring.js?v=11';
-import { analyzeScreenshot } from './ocr.js?v=11';
-import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=11';
+} from './scoring.js?v=12';
+import { analyzeScreenshot } from './ocr.js?v=12';
+import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=12';
 
 // 現在の状態
 let state = {

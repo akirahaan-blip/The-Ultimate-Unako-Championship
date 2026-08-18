@@ -53,7 +53,7 @@ header {
    display を切り替えるので、点灯のたびにアニメーションが頭から流れ直す。 */
 .hibiscus-lamp {
   /* ここの2つが点滅の調整つまみ */
-  --appear-dur: 0.5s;    /* 出てくる時の明滅にかける時間 */
+  --appear-dur: 0.5s;    /* 出てくる時の動き（大きさ）にかける時間 */
   --blink-cycle: 0.15s;  /* 点滅の周期。小さいほど速い */
 
   display: none;
@@ -70,13 +70,16 @@ header {
   transform: scale(1.06);
   filter: saturate(1.15) brightness(1.05) drop-shadow(0 0 12px rgba(255, 140, 30, 0.85));
   animation:
-    lampFlickerIn var(--appear-dur) ease-out both,
-    lampAlt var(--blink-cycle) var(--appear-dur) step-end infinite;
+    lampAppear var(--appear-dur) ease-out both,
+    lampAlt var(--blink-cycle) step-end infinite;
 }
 
-/* 右側は半周期ずらして、左右が交互に光るようにする（沖ドキのハイビスカスと同じ動き） */
+/* 右側は半周期ぶん進んだ位置から始めて、左右が交互に光るようにする
+   （沖ドキのハイビスカスと同じ動き）。
+   遅延を正の値にすると、その間だけ右が出てこず「左が先に光る」ので、
+   負の遅延で最初のコマから逆位相にしている。 */
 #lampRight.lit {
-  animation-delay: var(--appear-dur), calc(var(--appear-dur) + var(--blink-cycle) / 2);
+  animation-delay: 0s, calc(var(--blink-cycle) / -2);
 }
 
 /* 上位の点灯（1000点以上）は「左のみ点滅」。
@@ -90,18 +93,13 @@ header {
   filter: grayscale(0.8) brightness(0.5) contrast(1.05);
 }
 
-/* 出てくる瞬間。ネオン管が点きかけるようにチカチカしてから安定する。
-   点滅が速すぎると目に負担なので、明滅は1.5秒で4回までに抑えている。 */
-@keyframes lampFlickerIn {
-  0%   { opacity: 0;    transform: scale(0.45) rotate(-12deg); }
-  10%  { opacity: 1;    transform: scale(1.18) rotate(4deg); }
-  18%  { opacity: 0.1;  transform: scale(1.05) rotate(0deg); }
-  28%  { opacity: 1; }
-  38%  { opacity: 0.15; }
-  50%  { opacity: 1; }
-  64%  { opacity: 0.35; }
-  76%  { opacity: 1; }
-  100% { opacity: 1;    transform: scale(1.06) rotate(0deg); }
+/* 出てくる瞬間の動き。大きさだけを扱い、opacity には触れない。
+   ここで opacity を動かすと点滅（lampAlt）と取り合いになり、
+   出てくる間だけ左右が揃って光ってしまう。 */
+@keyframes lampAppear {
+  0%   { transform: scale(0.4) rotate(-12deg); }
+  55%  { transform: scale(1.2) rotate(5deg); }
+  100% { transform: scale(1.06) rotate(0deg); }
 }
 
 /* 点いたあとの点滅。実機の映像を実測したところ
