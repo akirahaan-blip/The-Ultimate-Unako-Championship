@@ -9,9 +9,9 @@ import {
   NATURE_SCORES,
   NATURES,
   calculateTotalScore
-} from './scoring.js?v=10';
-import { analyzeScreenshot } from './ocr.js?v=10';
-import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=10';
+} from './scoring.js?v=11';
+import { analyzeScreenshot } from './ocr.js?v=11';
+import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=11';
 
 // 現在の状態
 let state = {
@@ -300,8 +300,8 @@ async function handleImageUpload(file) {
 const SLOT_LEVELS = [10, 25, 50, 70, 80];
 
 // ハイビスカスランプの点灯条件。どちらも「その点数以上」で成立する
-const LAMP_THRESHOLD = 900;       // 左右が交互に点滅
-const LAMP_SOLO_THRESHOLD = 1000; // 左だけ点滅（沖ドキの「左のみ」）
+const LAMP_THRESHOLD = 800;      // 左右が交互に点滅
+const LAMP_SOLO_THRESHOLD = 900; // 左だけ点滅（沖ドキの「左のみ」）
 let lampTier = 0;
 
 /**
