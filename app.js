@@ -23,7 +23,6 @@ let state = {
   ingredientPattern: "AAA",
   natureName: "",
   subSkills: [null, null, null, null, null],
-  silverSeeds: [false, false, false, false, false],
   isFlUnder10: false,
   isStreamBonus: false
 };
@@ -106,9 +105,6 @@ function renderFormControls() {
             return `<option value="${s.id}">${goldBadge}${s.name} (+${s.score}点)</option>`;
           }).join('')}
         </select>
-        <label class="seed-check">
-          <input type="checkbox" class="seed-input" data-slot="${i}"> 銀種
-        </label>
       </div>
     `;
   }).join('');
@@ -194,15 +190,6 @@ function bindEvents() {
     });
   });
 
-  // 銀種変更
-  subSkillContainer.querySelectorAll(".seed-input").forEach(chk => {
-    chk.addEventListener("change", (e) => {
-      const slot = parseInt(e.target.dataset.slot, 10);
-      state.silverSeeds[slot] = e.target.checked;
-      recalculateAndRender();
-    });
-  });
-
   // X投稿用の書き出し
   shareImgBtn.addEventListener("click", async () => {
     const label = shareImgBtn.textContent;
@@ -249,7 +236,6 @@ function resetState() {
     ingredientPattern: "AAA",
     natureName: "",
     subSkills: [null, null, null, null, null],
-    silverSeeds: [false, false, false, false, false],
     isFlUnder10: false,
     isStreamBonus: false
   };
@@ -402,11 +388,6 @@ function updateUIFromState() {
   subSkillContainer.querySelectorAll(".skill-select").forEach(sel => {
     const slot = parseInt(sel.dataset.slot, 10);
     sel.value = state.subSkills[slot] || "";
-  });
-
-  subSkillContainer.querySelectorAll(".seed-input").forEach(chk => {
-    const slot = parseInt(chk.dataset.slot, 10);
-    chk.checked = !!state.silverSeeds[slot];
   });
 }
 
