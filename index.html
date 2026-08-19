@@ -23,7 +23,20 @@
     <div class="subtitle">The Ultimate Unako Championship</div>
   </header>
 
- 
+  <!-- スクショ画像アップロード -->
+  <section class="upload-card" id="uploadCard">
+    <input type="file" id="fileInput" accept="image/*">
+    <div class="upload-icon">📸</div>
+    <div class="upload-text">スクショ画像をアップロード / ドロップ</div>
+    <div class="upload-subtext">ステータス画面の写真から自動でスコアを判定します</div>
+    
+    <div class="ocr-progress" id="ocrProgress">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">解析中...</div>
+    </div>
+  </section>
 
   <!-- 自動読み取りの結果一覧（解析後に表示） -->
   <div class="ocr-summary" id="ocrSummary"></div>
@@ -60,21 +73,6 @@
       <span>公式スコア判定</span>
     </div>
   </main>
-      <!-- 特別ボーナスチェックボックス -->
-    <div style="margin-top: 12px;">
-      <label>特別ボーナス</label>
-      <div class="chip-grid">
-        <label class="chip-checkbox">
-          <input type="checkbox" id="shinyCheck"> ★ 色違い (+350点)
-        </label>
-        <label class="chip-checkbox">
-          <input type="checkbox" id="flCheck"> FL10以内 (+100点)
-        </label>
-        <label class="chip-checkbox">
-          <input type="checkbox" id="streamCheck"> リサ配ボーナス (+70点)
-        </label>
-      </div>
-    </div>
 
   <!-- X投稿用 -->
   <div class="btn-group">
@@ -140,26 +138,26 @@
       </div>
     </div>
 
+    <!-- 特別ボーナスチェックボックス -->
+    <div style="margin-top: 12px;">
+      <label>特別ボーナス</label>
+      <div class="chip-grid">
+        <label class="chip-checkbox">
+          <input type="checkbox" id="shinyCheck"> ★ 色違い (+350点)
+        </label>
+        <label class="chip-checkbox">
+          <input type="checkbox" id="flCheck"> FL10以内 (+100点)
+        </label>
+        <label class="chip-checkbox">
+          <input type="checkbox" id="streamCheck"> リサ配ボーナス (+70点)
+        </label>
+      </div>
+    </div>
   </div>
 
   <!-- サブスキル5枠 -->
   <h2 class="section-title">サブスキル（Lv10〜80）</h2>
   <div class="form-group" id="subSkillContainer"></div>
-  
-   <!-- スクショ画像アップロード -->
-  <section class="upload-card" id="uploadCard">
-    <input type="file" id="fileInput" accept="image/*">
-    <div class="upload-icon">📸</div>
-    <div class="upload-text">スクショ画像をアップロード / ドロップ</div>
-    <div class="upload-subtext">ステータス画面の写真から自動でスコアを判定します</div>
-    
-    <div class="ocr-progress" id="ocrProgress">
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progressBar"></div>
-      </div>
-      <div class="progress-label" id="progressLabel">解析中...</div>
-    </div>
-  </section>
 
   <!-- 履歴 -->
   <h2 class="section-title">保存履歴</h2>
