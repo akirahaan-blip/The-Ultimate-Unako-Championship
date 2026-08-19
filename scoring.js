@@ -5,7 +5,7 @@
  * vendor/pokesleep-vision のマスタデータを使う。
  * ここに持つのは大会の配点だけにして、名前を二重管理しないようにしている。
  */
-import { SUB_SKILLS as SUB_SKILL_MASTER, NATURES as NATURE_MASTER } from './vendor/pokesleep-vision/gamedata.js?v=12';
+import { SUB_SKILLS as SUB_SKILL_MASTER, NATURES as NATURE_MASTER } from './vendor/pokesleep-vision/gamedata.js?v=13';
 
 // サブスキルの大会配点。isGold は「オール金スキルボーナス」の対象かどうか。
 const SUB_SKILL_POINTS = {

@@ -9,9 +9,9 @@ import {
   NATURE_SCORES,
   NATURES,
   calculateTotalScore
-} from './scoring.js?v=12';
-import { analyzeScreenshot } from './ocr.js?v=12';
-import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=12';
+} from './scoring.js?v=13';
+import { analyzeScreenshot } from './ocr.js?v=13';
+import { buildPostText, copyPostText, downloadScoreImage } from './share.js?v=13';
 
 // 現在の状態
 let state = {
@@ -263,7 +263,16 @@ async function handleImageUpload(file) {
             progressLabel.textContent = `解析中... ${pct}%`;
           });
 
+          // 色違い・FL10以内・リサ配はスクショに写らないのでOCRでは判定できない。
+          // 解析のたびに resetState() で消してしまうと、先に入れてもらった
+          // チェックが外れてしまうため、ここだけ引き継ぐ。
+          const manualBonus = {
+            isShiny: state.isShiny,
+            isFlUnder10: state.isFlUnder10,
+            isStreamBonus: state.isStreamBonus
+          };
           resetState();
+          Object.assign(state, manualBonus);
 
           if (detected.sp) state.sp = detected.sp;
           if (detected.catchType) {

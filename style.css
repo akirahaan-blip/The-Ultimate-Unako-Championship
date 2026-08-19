@@ -791,3 +791,40 @@ button.btn {
   background: #fff;
   color: var(--text-main);
 }
+
+/* 特別ボーナスのカード（アップロード欄の上に置いている） */
+.bonus-card {
+  background: var(--card-bg);
+  border: 1px solid #ffd9e4;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.bonus-card-head {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bonus-card-head span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  background: var(--bg);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+/* チェックが入っている項目は見て分かるようにする */
+.chip-checkbox:has(input:checked) {
+  background: var(--primary-light);
+  border-color: #ffb3c9;
+  color: var(--primary-dark);
+}
